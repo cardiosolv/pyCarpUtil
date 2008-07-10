@@ -1,13 +1,9 @@
-    #!/usr/bin/env python
+#!/usr/bin/env python
 
-import sys
-import os
-import pdb
-
+import os, sys
 from pylab import *
-from numpy import *
+from numpy import zeros
 from os import getcwd
-
 from condVelocity import condVelocity
 
 def printUsage():
@@ -27,21 +23,26 @@ if __name__ == "__main__":
     resArray  = (10,25,50,100,200,250,500,750,1000)
     resValue  = -1
 
-    lambDict  = {'ucla-long' : 879.159561,
-                 'ucla-trans': 1,
-                 'ucla-slow' : 1,
-                 'tt2-long'  : 887.243478,
-                 'tt2-trans' : 1,
-                 'tt2-slow'  : 1}
+    lambDict  = {'ucla-long'  : 879.159561,
+                 'ucla-trans' : 1,
+                 'ucla-slow'  : 1,
+                 'tt2-long'   : 887.243478,
+                 'tt2-trans'  : 1,
+                 'tt2-slow'   : 1,
+                 'lr2f-long'  : 1,
+                 'lr2f-trans' : 1,
+                 'lr2f-slow'  : 1}
     
     titleDict = {'ucla-long' : 'Longitudinal (UCLA_RAB)',
                  'ucla-trans': 'Transverse (UCLA_RAB)',
                  'ucla-slow' : 'Slow decremental (UCLA_RAB)',
                  'tt2-long'  : 'Longitudinal (TT2)',
                  'tt2-trans' : 'Transverse (TT2)',
-                 'tt2-slow'  : 'Slow decremental (TT2)'}
+                 'tt2-slow'  : 'Slow decremental (TT2)',
+                 'lr2f-long'  : 'Longitudinal (LRII_F)',
+                 'lr2f-trans'  : 'Transverse (LRII_F)',
+                 'lr2f-slow'  : 'Slow decremental (LRII_F)'}
     
-
     # usage
     while len(sys.argv) == 1:
         printUsage()
@@ -130,9 +131,6 @@ if __name__ == "__main__":
     if arrSize > 1:
         plot(x1[:], cvArray[:,1], linewidth=1.0)
         plot(x1[:], cvArray[:,2], 'r')
-        
-        #plot(cvArray[:,0], cvArray[:,1], linewidth=1.0)
-        #plot(cvArray[:,0], cvArray[:,2], 'ro')
         
         legend(('hexa', 'tetra'), 'upper right')
         xlabel('dx(um)')
