@@ -23,15 +23,15 @@ if __name__ == "__main__":
     resArray  = (10,25,50,100,200,250,500,750,1000)
     resValue  = -1
 
-    lambDict  = {'ucla-long'  : 879.159561,
-                 'ucla-trans' : 1,
-                 'ucla-slow'  : 1,
-                 'tt2-long'   : 887.243478,
-                 'tt2-trans'  : 1,
-                 'tt2-slow'   : 1,
-                 'lr2f-long'  : 1,
-                 'lr2f-trans' : 1,
-                 'lr2f-slow'  : 1}
+    lambDict  = {'ucla-long'  : 894.42214823,
+                 'ucla-trans' : 312.15803892,
+                 'ucla-slow'  : 79.11666987 ,
+                 'tt2-long'   : 919.34206339,
+                 'tt2-trans'  : 313.74227759,
+                 'tt2-slow'   : 80.07370971 , 
+                 'lr2f-long'  : 669.32099569,
+                 'lr2f-trans' : 225.82278861,
+                 'lr2f-slow'  : 59.50694777 }
     
     titleDict = {'ucla-long' : 'Longitudinal (UCLA_RAB)',
                  'ucla-trans': 'Transverse (UCLA_RAB)',

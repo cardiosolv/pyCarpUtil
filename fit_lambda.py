@@ -52,7 +52,7 @@ def fit_lambda(igb_file, pts_file, resolution=100):
     bestparams = pbest[0]                                           # solution (estimated parameters)
     cov_x      = pbest[1]                                           # estimate of the covariance matrix of the solution
     
-    print ' best fit parameters ',bestparams
+    print ' \nbest fit parameters ' , bestparams
     #print cov_x
     
     datafit = dbexpl(x,bestparams)
@@ -63,19 +63,28 @@ def fit_lambda(igb_file, pts_file, resolution=100):
     grid(True)
     show()
 
-def main():
+def main(args):
     
     #igb_file = '/data/sim/space_constant/sc_ucla_long_0100um/vm.igb'
     #pts_file = '/data/sim/space_constant/sc_ucla_long_0100um/sc_ucla_long_t0100um_i.pts'
+        
+    if len(args) != 3:
+        print " Usage: python fit_lambda.py <igb_file> <pts_file>"
+        sys.exit(-1)
     
-    #igb_file = '/data/sim/space_constant/sc_ucla_trans_0100um/vm.igb'
-    #pts_file = '/data/sim/space_constant/sc_ucla_trans_0100um/sc_ucla_trans_t0100um_i.pts'
+    igb_file = str(args[1])
+    pts_file = str(args[2])
     
-    igb_file = '/data/sim/space_constant/sc_ucla_slow_0100um/vm.igb'
-    pts_file = '/data/sim/space_constant/sc_ucla_slow_0100um/sc_ucla_slow_t0100um_i.pts'
-    
+    if (os.path.isfile(igb_file) != True):
+        print " Error fit_lambda module: file %s was not found" + igb_file
+        exit(-1)
+        
+    if (os.path.isfile(pts_file) != True):
+        print " Error fit_lambda module: file %s was not found" + pts_file
+        exit(-1)
+
     fit_lambda(igb_file, pts_file, resolution=100)
     
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
     
