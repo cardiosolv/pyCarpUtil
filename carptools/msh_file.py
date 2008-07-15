@@ -26,6 +26,18 @@ class MeshFile:
                 'resolution[2]': resolution
                 } 
     
+    def get_parameter(self, param_key):
+        """
+        Return param_key in the params dictionary
+        """
+        p = self.params
+        if not p.has_key(param_key):
+            print " Error in ParameterFile: self.params doesn't have the keyword %s" % (param_key)
+            sys.exit(-1)
+        else:
+            return p[param_key]
+       
+    
     def write_to_file(self, filename='msh_file.par'):
         name,  element, res = self.params['mesh'],    self.params['Elem3D'],  self.params['resolution[0]']
         size0, size1, size2 = self.params['size[0]'], self.params['size[1]'], self.params['size[2]']
