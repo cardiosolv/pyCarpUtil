@@ -5,13 +5,15 @@ from pylab import *
 from numpy import zeros
 from os import getcwd
 from condVelocity import condVelocity
+import pdb
 
 def printUsage():
     usage  = "  >> Usage: python calculateCV.py <OPTIONS>\n"
     usage += "  >> Description:\n\n"
-    usage += "\t -d <experiment_directory>\n\t \t directory containing the results of the experiments for different resolutions\n\n"
-    usage += "\t -r <one_value_resolution>\n\t \t the resolution you want to compute the conduction velocity\n\n"
-    usage += "\t --save\n\t \t if you want to save a file with data\n"
+    usage += "\t -d <experiment_directory>\t directory containing the results of the experiments for different resolutions\n"
+    usage += "\t -m <ionic_model>         \t name of the ionic model (ucla-long, ucla-slow, ucla-trans, tt2-long, ..., lr2f-long) \n"
+    usage += "\t -r <one_value_resolution>\t the resolution you want to compute the conduction velocity\n"
+    usage += "\t --save\t\t\t\t if you want to save a file with data\n"
     print usage
 
 if __name__ == "__main__":
@@ -33,14 +35,14 @@ if __name__ == "__main__":
                  'lr2f-trans' : 225.82278861,
                  'lr2f-slow'  : 59.50694777 }
     
-    titleDict = {'ucla-long' : 'Longitudinal (UCLA_RAB)',
-                 'ucla-trans': 'Transverse (UCLA_RAB)',
-                 'ucla-slow' : 'Slow decremental (UCLA_RAB)',
-                 'tt2-long'  : 'Longitudinal (TT2)',
-                 'tt2-trans' : 'Transverse (TT2)',
-                 'tt2-slow'  : 'Slow decremental (TT2)',
+    titleDict = {'ucla-long'  : 'Longitudinal (UCLA_RAB)',
+                 'ucla-trans' : 'Transverse (UCLA_RAB)',
+                 'ucla-slow'  : 'Slow decremental (UCLA_RAB)',
+                 'tt2-long'   : 'Longitudinal (TT2)',
+                 'tt2-trans'  : 'Transverse (TT2)',
+                 'tt2-slow'   : 'Slow decremental (TT2)',
                  'lr2f-long'  : 'Longitudinal (LRII_F)',
-                 'lr2f-trans'  : 'Transverse (LRII_F)',
+                 'lr2f-trans' : 'Transverse (LRII_F)',
                  'lr2f-slow'  : 'Slow decremental (LRII_F)'}
     
     # usage
@@ -126,11 +128,29 @@ if __name__ == "__main__":
         outFile.close()
 
     # matplotlib        
-    x1 = cvArray[:,0]/lambDict[model]
-        
+    x1 = cvArray[:,0]                   # not scaled
+    #x1 = cvArray[:,0]/lambDict[model]  # scaled (dx/lambda)
+    
+    # try to avoid error with NaNs in the case where a Node was not activated
+    x1 = x1; aux1 = cvArray[:,1]
+    x2 = x1; aux2 = cvArray[:,2]
+    
+    for i in xrange(len(cvArray[:,1])):
+        if(str(cvArray[:,1][i]) == 'nan'):
+            x1   = x1[0:i]
+            aux1 = cvArray[:,1][0:i]
+            break
+    
+    for i in xrange(len(cvArray[:,2])):
+        if(str(cvArray[:,2][i]) == 'nan'):
+            x2   = x1[0:i]
+            aux2 = cvArray[:,2][0:i]
+            break    
+    
+    # plot
     if arrSize > 1:
-        plot(x1[:], cvArray[:,1], linewidth=1.0)
-        plot(x1[:], cvArray[:,2], 'r')
+        plot(x1[:], aux1, linewidth=1.0)
+        plot(x2[:], aux2, 'r')
         
         legend(('hexa', 'tetra'), 'upper right')
         xlabel('dx(um)')

@@ -5,7 +5,7 @@ from scipy.io import write_array
 from scipy.io import read_array
 from read_array_pts import read_array_pts
 
-def condVelocity(ptsFile, actFile):
+def condVelocity(ptsFile, actFile, output=True):
     """
     Function to calculate the conduction velocity in a cable slab
     Input: ptsFile - description of the nodes
@@ -32,8 +32,8 @@ def condVelocity(ptsFile, actFile):
     actTI = where(act[:,0] == aux)     # activation time index
 
     if size(actTI) == 0:
-        print " NodeA was not activated. CV is unknown!"
-        return
+        if output: print " NodeA was not activated. CV is unknown!"
+        return nan
     else:
         actTI = actTI[0][0]            # from tuple to scalar
         actTA = act[actTI , 1]         # activation time for node A
@@ -46,8 +46,8 @@ def condVelocity(ptsFile, actFile):
     actTI = where(act[:,0] == aux)     # activation time index
 
     if size(actTI) == 0:
-        print " NodeB was not activated. CV is unknown!"
-        return
+        if output: print " NodeB was not activated. CV is unknown!"
+        return nan
     else:
         actTI = actTI[0][0]            # from tuple to scalar
         actTB = act[actTI , 1]         # activation time for node B
@@ -55,5 +55,5 @@ def condVelocity(ptsFile, actFile):
     distAB = sqrt(sum(pow(nodeB - nodeA,2)))
     condve = distAB / (actTB - actTA)
         
-    print " CV = %.3f m/s" % (condve/1000)
+    if output: print " CV = %.3f m/s" % (condve/1000)
     return (condve/1000)
