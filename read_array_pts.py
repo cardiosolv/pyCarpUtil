@@ -11,14 +11,17 @@ from numpy import *
 from scipy.io import write_array
 from scipy.io import read_array
   
-#from read_array_pts import read_array_pts
-#nn, narray = read_array_pts("t0010um_i.pts")
-#print nn
-#print narray[:,0]
-#print narray[:,1]
-#print narray[:,2]    
-
 def read_array_pts(ptsFile):
+    """
+    Example of usage:
+    
+    from read_array_pts import read_array_pts
+    nn, narray = read_array_pts("t0010um_i.pts")
+    print nn
+    print narray[:,0]
+    print narray[:,1]
+    print narray[:,2]
+    """
     try:
         f = open(ptsFile)
         lines = f.readlines()
