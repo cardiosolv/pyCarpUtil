@@ -25,9 +25,8 @@ Typical calls for the constructor with arguments:
 Bernardo M. Rocha    
 """
 class igb_header:
-  
-    """igb_header constructor --- DEFAULT or with all the ARGUMENTS below"""
     def __init__(self, N=None, type=None, dim4=None, units=None, facteur=None, zero=None, systeme=None):
+        """igb_header constructor --- DEFAULT or with all the ARGUMENTS below"""
         self.x        =  0
         self.y        =  0
         self.z        =  0
@@ -76,10 +75,30 @@ class igb_header:
         if zero    != None: self.zero    = zero
         if systeme != None: self.systeme = systeme
 
+    def __str__(self):
+        """display the values of the members of the class"""
+        infomsg  = "\t header.x        : "      + str(self.x) + "\n"
+        infomsg += "\t header.y        : "      + str(self.y) + "\n"
+        infomsg += "\t header.z        : "      + str(self.z) + "\n"
+        infomsg += "\t header.t        : "      + str(self.t) + "\n"
+        infomsg += "\t header.dim_x    : "    + str(self.dim_x) + "\n"
+        infomsg += "\t header.dim_y    : "    + str(self.dim_y) + "\n"
+        infomsg += "\t header.dim_z    : "    + str(self.dim_z) + "\n"
+        infomsg += "\t header.dim_t    : "    + str(self.dim_t) + "\n"        
+        infomsg += "\t header.unites_x : " + str(self.unites_x) + "\n"
+        infomsg += "\t header.unites_y : " + str(self.unites_y) + "\n"
+        infomsg += "\t header.unites_z : " + str(self.unites_z) + "\n"
+        infomsg += "\t header.unites_t : " + str(self.unites_t) + "\n"
+        infomsg += "\t header.unites   : "   + str(self.unites) + "\n"
+        infomsg += "\t header.type     : "     + str(self.type) + "\n"
+        infomsg += "\t header.systeme  : "  + str(self.systeme) + "\n"
+        infomsg += "\t header.facteur  : "  + str(self.facteur) + "\n"
+        infomsg += "\t header.fac_t    : "    + str(self.fac_t) + "\n"
+        infomsg += "\t header.zero     : "     + str(self.zero)        
+        return infomsg
 
-    """ initialize header structure --- use NaN for numbers and '' for strings as initializer"""
     def initialize(self):
-        
+        """ initialize header structure --- use NaN for numbers and '' for strings as initializer"""        
         self.x        = NaN
         self.y        = NaN
         self.z        = NaN
@@ -98,25 +117,3 @@ class igb_header:
         self.facteur  = NaN
         self.fac_t    = NaN
         self.zero     = NaN
-    
-    """display the values of the members of the class"""   
-    def info(self):
-        infomsg  = "\t hd.x \t\t: "      + str(self.x) + "\n"
-        infomsg += "\t hd.y \t\t: "      + str(self.y) + "\n"
-        infomsg += "\t hd.z \t\t: "      + str(self.z) + "\n"
-        infomsg += "\t hd.t \t\t: "      + str(self.t) + "\n"
-        infomsg += "\t hd.dim_x \t: "    + str(self.dim_x) + "\n"
-        infomsg += "\t hd.dim_y \t: "    + str(self.dim_y) + "\n"
-        infomsg += "\t hd.dim_z \t: "    + str(self.dim_z) + "\n"
-        infomsg += "\t hd.dim_t \t: "    + str(self.dim_t) + "\n"        
-        infomsg += "\t hd.unites_x \t: " + str(self.unites_x) + "\n"
-        infomsg += "\t hd.unites_y \t: " + str(self.unites_y) + "\n"
-        infomsg += "\t hd.unites_z \t: " + str(self.unites_z) + "\n"
-        infomsg += "\t hd.unites_t \t: " + str(self.unites_t) + "\n"
-        infomsg += "\t hd.unites \t: "   + str(self.unites) + "\n"
-        infomsg += "\t hd.type \t: "     + str(self.type) + "\n"
-        infomsg += "\t hd.systeme \t: "  + str(self.systeme) + "\n"
-        infomsg += "\t hd.facteur \t: "  + str(self.facteur) + "\n"
-        infomsg += "\t hd.fac_t \t: "    + str(self.fac_t) + "\n"
-        infomsg += "\t hd.zero \t: "     + str(self.zero)        
-        print infomsg
