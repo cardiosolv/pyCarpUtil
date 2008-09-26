@@ -5,34 +5,39 @@ import sys
 class ParameterFile():
     """
     Class for the CARP parameter file
+    
     Bernardo M. Rocha
     """
-    
-    def __init__(self, ionicModel, baseFile=None):
-        self.params = {
-                'num_regions'    : 1 ,
-                'region[0].name' : "simulation",
-                'region[0].im'   : ionicModel,
-                'tend'           : 100.0,
-                'timedt'         : 1.0,
-                'dt'             : 5.0,
-                'spacedt'        : 3.0,
-                'readmesh'       : 2,
-                'solnmethod'     : 2,
-                'CN_parab'       : 0,
-                'cg_tol_parab'   : 1.0e-3,
-                'experiment'     : 0,
-                'gridout_i'      : 0,
-                'num_LATs'       : 0,
-                'lats[0].ID'     : 'activation',
-                'gil'            : 0.174
-                }
-
-        self.num_stim = 0
-        self.stimulus = []
+    def __init__(self, ionicModel=None, baseFile=None):
         
-        if baseFile != None:
+        if baseFile is None:                        
+            self.params = {
+                    'num_regions'    : 1 ,
+                    'region[0].name' : "simulation",
+                    'tend'           : 100.0,
+                    'timedt'         : 1.0,
+                    'dt'             : 5.0,
+                    'spacedt'        : 3.0,
+                    'readmesh'       : 2,
+                    'solnmethod'     : 2,
+                    'CN_parab'       : 0,
+                    'cg_tol_parab'   : 1.0e-3,
+                    'experiment'     : 0,
+                    'gridout_i'      : 0,
+                    'num_LATs'       : 0,
+                    'lats[0].ID'     : 'activation',
+                    'gil'            : 0.174
+                    }
+            if ionicModel is not None:
+                self.params['region[0].im'] = ionicModel
+            self.num_stim = 0
+            self.stimulus = []
+
+        else:
             self.parseBaseFile(baseFile)
+    
+    def parseBaseFile(baseFile):
+        pass
     
     def add_stimulus(self, stimtype, start, strength, duration, xd, yd, zd, x0, y0, z0):
         self.num_stim = self.num_stim + 1
@@ -41,12 +46,12 @@ class ParameterFile():
             'start'    : start,
             'strength' : strength,
             'duration' : duration,
-            'xd' : xd,
-            'yd' : yd,
-            'zd' : zd,
-            'x0' : x0,
-            'y0' : y0,
-            'z0' : z0
+            'xd'       : xd,
+            'yd'       : yd,
+            'zd'       : zd,
+            'x0'       : x0,
+            'y0'       : y0,
+            'z0'       : z0
         }
         self.stimulus.append(dic_stim)
     
@@ -73,7 +78,10 @@ class ParameterFile():
             return p[param_key]
        
     def write_to_file(self, filename='par_file.par'):
-        nregions = self.params['num_regions']; reg0name = self.params['region[0].name']; reg0im = self.params['region[0].im'];
+        
+        nregions = self.params['num_regions']
+        reg0name = self.params['region[0].name']
+        reg0im   = self.params['region[0].im']
         
         f = open(filename, 'w')
         
@@ -83,34 +91,22 @@ class ParameterFile():
         
         f.write("# General settings\n\n")
         for key, val in self.params.items():
-            if len(key) < 7:
-                aux = 7-len(key); spc = ''
-                for i in xrange(aux):
-                    spc += ' '
-                key = "%s%s" % (key, spc)
-            f.write("%s \t = %s\n" % (key, val))
+            f.write("%s = %s\n" % (key, val))
     
         f.write("\n# Stimulus\n\n")
-        f.write("num_stim \t\t = %s\n" % self.num_stim)
+        f.write("num_stim = %s\n" % self.num_stim)
         stim_cont = 0
         for stim in self.stimulus:
             stim_str = "stimulus[%1d]." % stim_cont
             for key, val in stim.items():
-                if len(key) < 7:
-                    aux = 7-len(key); spc = ''
-                    for i in xrange(aux):
-                        spc += ' '
-                    key = "%s%s" % (key, spc)
-                f.write("%s%s \t = %s\n" % (stim_str, key, val))
+                f.write("%s%s = %s\n" % (stim_str, key, val))
 
         f.close()
 
 if __name__ == "__main__":
     
-    ### Example of usage
-        
-    ## CARP simulation setup
-    mypar = ParameterFile("LRDII_F")
+    ### Example of usage ###
+    mypar = ParameterFile("LRDII_F")        
 
     # common setup
     mypar.set_parameter('readmesh',3)
@@ -124,13 +120,10 @@ if __name__ == "__main__":
     mypar.set_parameter('num_LATs',1)
     mypar.set_parameter('lats[0].ID', 'activation')
     mypar.set_parameter('gil',0.178077495)
-
     # depends on the simulation
     mypar.set_parameter('tend',200)
-
     # add stimulus    
     mypar.add_stimulus(0, 0, 5e-3, 1, 1100, 1100, 100, -550, -550, -10099)
-
     # write
     mypar.write_to_file('example_lr2f_simulation.par')
     

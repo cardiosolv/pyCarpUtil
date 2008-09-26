@@ -25,8 +25,10 @@ def igb_diff(igbfile1, igbfile2):
     for i in xrange(shp[1]):
         Vm_diff[:,i] = Vm1[:,i] - Vm2[:,i]
     
-    write_igb (Vm_diff, hd1, 'vm_diff.igb')
+    write_igb (Vm_diff, hd1, 'vm_diff.igb', gzipped=False)
     print "Vm_diff was written successfully!"
+    
+    pdb.set_trace()
     
     return Vm_diff
 

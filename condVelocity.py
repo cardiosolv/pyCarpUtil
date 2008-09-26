@@ -3,7 +3,7 @@
 from numpy import *
 from scipy.io import write_array
 from scipy.io import read_array
-from read_array_pts import read_array_pts
+from sctools import read_array_pts
 
 def condVelocity(ptsFile, actFile, output=True):
     """
@@ -14,7 +14,7 @@ def condVelocity(ptsFile, actFile, output=True):
             0 1 2 3 4 5 6 7 8
                 A       B
     
-    @author Bernardo Martins Rocha
+    Bernardo Martins Rocha, 2008
     """
    
     xyz = read_array_pts(ptsFile)
@@ -57,3 +57,4 @@ def condVelocity(ptsFile, actFile, output=True):
         
     if output: print " CV = %.3f m/s" % (condve/1000)
     return (condve/1000)
+    

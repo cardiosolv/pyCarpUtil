@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
+import os, pdb
 from pylab import *
 from scipy.optimize import leastsq
 from read_array_pts import *
-from igb.read_igb_file import read_igb_slice
+from igb.igb_read import read_igb_slice
 
 def fit_lambda(igb_file, pts_file, resolution=100):
     """
@@ -27,9 +28,13 @@ def fit_lambda(igb_file, pts_file, resolution=100):
 
     value1 = Vm[:,100]
     
+    
     x     = zeros((len(lindx))) # space
     data  = zeros((len(lindx))) # vm at t=100ms    
     
+    ###
+    ### improve the loop and assignments below
+    ###
     for i in lindx:
         x[i]     = xyz[i,0]
         data[i] = value1[i]
@@ -45,6 +50,9 @@ def fit_lambda(igb_file, pts_file, resolution=100):
         err = data - dbexpl(x,p)
         return err
         
+	
+    pdb.set_trace()
+    
     ### vm curve fitting ###
     p0         = [10,1000]                                          # initial guesses
     guessfit   = dbexpl(x,p0)                                       # data evaluated with p0

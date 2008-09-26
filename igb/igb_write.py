@@ -10,7 +10,7 @@ IGB write file
 Bernardo M. Rocha
 """
 
-def write_igb(data, hd, filename, gzipped=True):
+def write_igb(data, hd, filename, gzipped=False):
     
     t0 = time.time()
     
