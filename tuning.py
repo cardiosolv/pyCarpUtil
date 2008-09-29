@@ -67,7 +67,7 @@ def find_CV(avg_dx, g_bulk):
         cmd = 'mesher +F %s' % mesh_file
         runCommandLine(cmd)        
         # run CARP
-        cmd = 'carp.linux.petsc +F %s -meshname %s'  % (carp_file, mesh_name)
+        cmd = 'carp.linux.petsc +F %s -meshname %s -simID OUTPUT_DIR'  % (carp_file, mesh_name)
         runCommandLine(cmd)
         
         # calculate CV
