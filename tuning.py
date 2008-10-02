@@ -79,8 +79,9 @@ def find_CV(avg_dx, g_bulk,model):
     print "\n S i m u l a t i o n   d e t a i l s\n"
     if len(resList) == 1:
         print "    mesh resolution :  %d um" % resList[0]
+        print "    ionic model     : %s" % model
         print "    conductivity    : %8.5f" % g_bulk
-        print "    CV measured     : %8.5f m/s\n" % cvList[0]
+        print "    CV measured     : %8.5f m/s" % cvList[0]
         return cvList[0]
     else:
         print "    mesh resolution : ", resList
@@ -117,10 +118,10 @@ def printUsage():
     print usage
     
 def printHelp():
-    help_dx  = "\t -d \t<value>\t directory of the simulations\n"
-    help_vel = "\t -v \t<value>\t name of the mesh file for mesher\n"
+    help_dx  = "\t -d \t<value>\t avg resolution of mesh in um (default=100um)\n"
+    help_vel = "\t -v \t<value>\t desired conduction velocity in m/s\n"
     help_md  = "\t -m \t<value>\t name of ionic model to test\n"
-    help_g   = "\t -g \t<value>\t resolution for discretization\n"
+    help_g   = "\t -g \t<value>\t start value for bulk conductivity \n"
     help     = "  >> Description : script for tuning bulk conductivities\n  >> Parameters  :\n" + help_dx + help_vel + help_md + help_g
     print help
  
@@ -155,7 +156,8 @@ def main(args):
 
     CV_measured = find_CV (avgdx, gl_bulk, model)
 
-    print "    new g : %f\n" % (calculate_g (vel, CV_measured, gl_bulk))
+    print "    CV desired      : ", vel, " m/s"
+    print "    use gbulk       : %8.5f\n" % (calculate_g (vel, CV_measured, gl_bulk))
 
 
 if __name__ == "__main__":
