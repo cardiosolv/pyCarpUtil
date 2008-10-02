@@ -31,7 +31,7 @@ class CableTest(ParameterFile):
 
         self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
 
-def find_CV(avg_dx, g_bulk):
+def find_CV(avg_dx, g_bulk,model):
     """
     Input: avg_dx - mesh resolution as a scalar or list (list - Not implemented yet)
            g_bulk - conductivity for the cable
@@ -60,9 +60,9 @@ def find_CV(avg_dx, g_bulk):
         my_mesh = MeshFile(mesh_name, size0=xsize, size1=yzsize, size2=yzsize, element=1, resolution=res)
         my_mesh.write_to_file(mesh_file)
 
-        my_cable = CableTest('UCLA_RAB', g_bulk)
+        my_cable = CableTest(model, g_bulk)
         my_cable.write_to_file(carp_file)
-           
+
         # run MESHER
         cmd = 'mesher +F %s' % mesh_file
         runCommandLine(cmd)        
@@ -110,13 +110,54 @@ def runCommandLine(command):
     out = r.readlines()    
     r.close()
     w.close()
+   
+
+def printUsage():
+    usage = "  >> Usage       : python -d <dx> -g <initial conductivity> -v <desired_velocity>"
+    print usage
     
+def printHelp():
+    help_dx  = "\t -d \t<value>\t directory of the simulations\n"
+    help_vel = "\t -v \t<value>\t name of the mesh file for mesher\n"
+    help_md  = "\t -m \t<value>\t name of ionic model to test\n"
+    help_g   = "\t -g \t<value>\t resolution for discretization\n"
+    help     = "  >> Description : script for tuning bulk conductivities\n  >> Parameters  :\n" + help_dx + help_vel + help_md + help_g
+    print help
+ 
+def main(args):
+
+    # default values 
+    model   = "MBRDR"
+    avgdx   = 100
+    gil     =   0.174
+    gel     =   0.625
+    gl_bulk = gil*gel/(gil+gel)
+    
+    # usage
+    while len(args) == 1:
+        printUsage(); printHelp(); sys.exit(1)
+        
+
+    # read variables from the command line
+    while len(args) > 1:
+        option = args[1];         del args[1]
+        if option == '-d': 
+            avgdx = int(args[1]); del args[1]               
+        elif option == '-v':
+            vel = float(args[1]);  del args[1]
+        elif option == '-m':
+            model = args[1];  del args[1]
+        elif option == '-g':
+            gl_bulk   = float(args[1]); del args[1]
+        else:
+            print args[0],': invalid option',option
+            sys.exit(1)
+
+    CV_measured = find_CV (avgdx, gl_bulk, model)
+
+    print "    new g : %f\n" % (calculate_g (vel, CV_measured, gl_bulk))
+
+
 if __name__ == "__main__":
-       
-    avgdx = 50
-    gbulk = 0.178077495
-    
-    CV_measured = find_CV (avgdx, gbulk)
-    
-    print "    new g : %f\n" % (calculate_g (0.7 , CV_measured, gbulk))
-    
+    main(sys.argv)
+ 
