@@ -5,6 +5,8 @@ from carptools.msh_file import *
 from carptools.par_file import *
 from condVelocity import condVelocity
 
+import pdb
+
 """
 Bernardo M. Rocha, 2008
 """
@@ -30,6 +32,35 @@ class CableTest(ParameterFile):
         self.set_parameter('tend',        200)
 
         self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
+
+def calculate_g(v1,v0,g0):
+    """
+    Input:  v1 - desired conduction velocity
+            v0 - computed conduction velocity
+            g0 - conductivity to obtain v0
+    Output: g1 - conductivity to obtain v1
+    Description: g1 = g0 * ((v1/v0)**2)
+    """
+    return g0 * ((v1/v0)*(v1/v0))
+
+def checkCARP():
+    carp   = False
+    mesher = False
+    carpBinary   = 'carp.linux.petsc'
+    mesherBinary = 'mesher'
+    pathList = os.environ.get('PATH').split(':')
+    for path in pathList:
+        binaryList = os.listdir(path)
+        binaryList.sort()        
+        if carpBinary in binaryList:
+            carp = True
+            #print os.path.join(path,carpBinary)
+        if mesherBinary in binaryList:
+            mesher = True
+            #print os.path.join(path,mesherBinary)
+
+    if not carp:   print "carp.linux.petsc was NOT found in $PATH"; exit(-1)
+    if not mesher: print "mesher was NOT found in $PATH"; exit(-1)
 
 def find_CV(avg_dx, g_bulk,model):
     """
@@ -79,7 +110,7 @@ def find_CV(avg_dx, g_bulk,model):
     print "\n S i m u l a t i o n   d e t a i l s\n"
     if len(resList) == 1:
         print "    mesh resolution :  %d um" % resList[0]
-        print "    ionic model     : %s" % model
+        print "    ionic model     :  %s" % model
         print "    conductivity    : %8.5f" % g_bulk
         print "    CV measured     : %8.5f m/s" % cvList[0]
         return cvList[0]
@@ -90,17 +121,8 @@ def find_CV(avg_dx, g_bulk,model):
         return cvList
 
 def run_simulation():
+    # try to implement and then use map
     pass
-
-def calculate_g(v1,v0,g0):
-    """
-    Input:  v1 - desired conduction velocity
-            v0 - computed conduction velocity
-            g0 - conductivity to obtain v0
-    Output: g1 - conductivity to obtain v1
-    Description: g1 = g0 * ((v1/v0)**2)
-    """
-    return g0 * ((v1/v0)*(v1/v0))
 
 def runCommandLine(command):
     """
@@ -110,8 +132,7 @@ def runCommandLine(command):
     r,w = popen2.popen4(command)
     out = r.readlines()    
     r.close()
-    w.close()
-   
+    w.close()   
 
 def printUsage():
     usage = "  >> Usage       : python -d <dx> -g <initial conductivity> -v <desired_velocity>"
@@ -130,24 +151,25 @@ def main(args):
     # default values 
     model   = "MBRDR"
     avgdx   = 100
-    gil     =   0.174
-    gel     =   0.625
+    gil     = 0.174
+    gel     = 0.625
     gl_bulk = gil*gel/(gil+gel)
+    
+    checkCARP()
     
     # usage
     while len(args) == 1:
         printUsage(); printHelp(); sys.exit(1)
-        
 
     # read variables from the command line
     while len(args) > 1:
-        option = args[1];         del args[1]
+        option = args[1];               del args[1]
         if option == '-d': 
-            avgdx = int(args[1]); del args[1]               
+            avgdx = int(args[1]);       del args[1]               
         elif option == '-v':
-            vel = float(args[1]);  del args[1]
+            vel = float(args[1]);       del args[1]
         elif option == '-m':
-            model = args[1];  del args[1]
+            model = args[1];            del args[1]
         elif option == '-g':
             gl_bulk   = float(args[1]); del args[1]
         else:
@@ -156,9 +178,8 @@ def main(args):
 
     CV_measured = find_CV (avgdx, gl_bulk, model)
 
-    print "    CV desired      : ", vel, " m/s"
+    print "    CV desired      : %8.5f m/s" % (vel)
     print "    use gbulk       : %8.5f\n" % (calculate_g (vel, CV_measured, gl_bulk))
-
 
 if __name__ == "__main__":
     main(sys.argv)
