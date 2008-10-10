@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from numpy import arange
-from numpy import *
+import sys
+from os import remove
+from numpy import arange, loadtxt
 from scipy.io import write_array
 from scipy.io import read_array
 
@@ -42,7 +43,7 @@ def read_array_pts(ptsFile):
         f.close()
     except IOError:
         print "IOError: File %s not found." % ptsFile
-        exit(-1)
+        sys.exit(-1)
     
     # number of nodes
     numNodes = int(lines[0]); del lines[0]
@@ -64,7 +65,6 @@ def read_array_pts(ptsFile):
         print " error read_array_pts(): the size of the array doesn't match"
         exit(-2)
     
-    from os import remove
     remove(nodesTmp)
             
     return nodes

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import os, sys, popen2
-from carptools.msh_file import *
-from carptools.par_file import *
+from carptools.msh_file import MeshFile
+from carptools.par_file import ParameterFile
 from condVelocity import condVelocity
 
 import pdb
