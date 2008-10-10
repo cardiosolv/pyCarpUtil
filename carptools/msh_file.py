@@ -10,7 +10,6 @@ class MeshFile:
     
     Bernardo M. Rocha
     """
-  
     def __init__(self, name, size0=1.0, size1=1.0, size2=1.0, element=0, resolution=100, tri2d=False):
         self.params = {
                 'mesh'         : name,
@@ -62,7 +61,7 @@ class MeshFile:
         f.write("size[2] = %.3f\n" % size2)
         f.write("\n# element type\n")
         f.write("Elem3D = %1d\n" % element)
-        f.write("\n# mesh resolution\n")
+        f.write("\n# mesh resolution \n")
         f.write("resolution[0] = %04d\n" % res)
         f.write("resolution[1] = %04d\n" % res)
         f.write("resolution[2] = %04d\n" % res)
