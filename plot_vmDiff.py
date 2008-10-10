@@ -31,8 +31,8 @@ if __name__ == "__main__":
 
     legend(in_args, loc=2)
     xlabel('time (ms)')
-    ylabel('number of nodes')
-    title('quad-tri at 50um - threshold 1 mV')
+    ylabel('L2 norm')
+    #title('quad-tri at 50um - threshold 1 mV')
     grid(True)
 
     show()
