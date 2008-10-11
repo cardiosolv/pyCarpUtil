@@ -2,13 +2,13 @@
 
 import sys
 
-class ParameterFile():
+class ParameterFile:
     """
     Class for the CARP parameter file
     
     Bernardo M. Rocha
     """
-    def __init__(self, ionicModel=None, baseFile=None):
+    def __init__(self, ionicModel=None, baseFile=None, carp_ver=None):
         
         if baseFile is None:                        
             self.params = {
@@ -28,6 +28,13 @@ class ParameterFile():
                     'lats[0].ID'     : 'activation',
                     'gil'            : 0.174
                     }
+            if carp_ver is 'carpm':
+                del self.params['num_regions']
+                self.params['num_imp_regions'] = 1
+                del self.params['gil']
+                self.params['num_gregions'] = 1
+                self.params['gregion[0].g_il'] = 0.174
+                del self.params['readmesh']
             if ionicModel is not None:
                 self.params['region[0].im'] = ionicModel
             self.num_stim = 0
@@ -77,11 +84,16 @@ class ParameterFile():
         else:
             return p[param_key]
        
-    def write_to_file(self, filename='par_file.par'):
+    def write_to_file(self, filename='par_file.par', carp_ver):
         
-        nregions = self.params['num_regions']
-        reg0name = self.params['region[0].name']
-        reg0im   = self.params['region[0].im']
+        if carp_ver is 'carpe':
+          nregions = self.params['num_regions']
+          reg0name = self.params['region[0].name']
+          reg0im   = self.params['region[0].im']
+        if carp_ver is 'carpm':
+          nregions = self.params['num_imp_regions']
+          reg0name = self.params['imp_region[0].name']
+          reg0im   = self.params['imp_region[0].im']
         
         f = open(filename, 'w')
         

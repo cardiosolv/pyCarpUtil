@@ -15,10 +15,9 @@ class CableTest(ParameterFile):
     """
     Base class for the cable to run the tuning simulations
     """
-    def __init__(self, im, gbulk):
-        ParameterFile.__init__(self, ionicModel=im)
+    def __init__(self, im, gbulk, vs):
+        ParameterFile.__init__(self, ionicModel=im, carp_ver=vs)
 
-        self.set_parameter('readmesh',    3)
         self.set_parameter('solnmethod',  4)
         self.set_parameter('gridout_i',   2)
         self.set_parameter('dt',          10)
@@ -28,8 +27,15 @@ class CableTest(ParameterFile):
         self.set_parameter('cg_tol_parab',1.0e-06)
         self.set_parameter('num_LATs',    1)
         self.set_parameter('lats[0].ID',  'activation')
-        self.set_parameter('gil',         gbulk)
         self.set_parameter('tend',        200)
+
+        # version specific settings
+        if vs is 'carpe':
+          self.set_parameter('readmesh',  3)
+          self.set_parameter('gil',       gbulk)
+
+        if vs is 'carpm':
+          self.set_parameter('gregion[0].g_il', gbulk)
 
         self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
 
@@ -67,7 +73,7 @@ def checkCARP(carpBinary, mesherBinary):
     if not carp:   print "carp.linux.petsc was NOT found in $PATH"; exit(-1)
     if not mesher: print "mesher was NOT found in $PATH"; exit(-1)
 
-def find_CV(avg_dx, g_bulk,model, carpBinary, mesherBinary):
+def find_CV(avg_dx, g_bulk,model, carpBinary, mesherBinary, carp_ver):
     """
     Input: avg_dx - mesh resolution as a scalar or list (list - Not implemented yet)
            g_bulk - conductivity for the cable
@@ -96,8 +102,8 @@ def find_CV(avg_dx, g_bulk,model, carpBinary, mesherBinary):
         my_mesh = MeshFile(mesh_name, size0=xsize, size1=yzsize, size2=yzsize, element=1, resolution=res)
         my_mesh.write_to_file(mesh_file)
 
-        my_cable = CableTest(model, g_bulk)
-        my_cable.write_to_file(carp_file)
+        my_cable = CableTest(model, g_bulk, carp_ver)
+        my_cable.write_to_file(carp_file, carp_ver)
 
         # run MESHER
         #cmd = 'mesher +F %s' % mesh_file
@@ -177,7 +183,7 @@ def main(argv):
         sys.exit(-1)
     
     # default options
-    carpBinary   = 'carpe.linux.petsc'
+    carpBinary   = 'carpm.linux.petsc'
     mesherBinary = 'mesher'
     
     for o, a in opts:
@@ -202,8 +208,9 @@ def main(argv):
     # end of command line parsing
     
     checkCARP(carpBinary, mesherBinary)
+    carp_ver = 'carpm'
 
-    CV_measured = find_CV (avgdx, gl_bulk, model, carpBinary, mesherBinary)
+    CV_measured = find_CV (avgdx, gl_bulk, model, carpBinary, mesherBinary, carp_ver)
 
     print "    CV desired      : %8.5f m/s" % (vel)
     print "    use gbulk       : %8.5f\n" % (calculate_g (vel, CV_measured, gl_bulk))
