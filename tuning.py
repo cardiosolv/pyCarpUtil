@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, popen2
+import os, sys, popen2, getopt
 from carptools.msh_file import MeshFile
 from carptools.par_file import ParameterFile
 from condVelocity import condVelocity
@@ -43,11 +43,14 @@ def calculate_g(v1,v0,g0):
     """
     return g0 * ((v1/v0)*(v1/v0))
 
-def checkCARP():
+def checkCARP(carpBinary, mesherBinary):
+    """
+    Purpose: find if the user has the specified/default
+    carp and mesher binaries in order to run the simulations
+    """
     carp   = False
     mesher = False
-    carpBinary   = 'carp.linux.petsc'
-    mesherBinary = 'mesher'
+    
     pathList = os.environ.get('PATH').split(':')
     for path in pathList:
         binaryList = os.listdir(path)
@@ -62,7 +65,7 @@ def checkCARP():
     if not carp:   print "carp.linux.petsc was NOT found in $PATH"; exit(-1)
     if not mesher: print "mesher was NOT found in $PATH"; exit(-1)
 
-def find_CV(avg_dx, g_bulk,model):
+def find_CV(avg_dx, g_bulk,model, carpBinary, mesherBinary):
     """
     Input: avg_dx - mesh resolution as a scalar or list (list - Not implemented yet)
            g_bulk - conductivity for the cable
@@ -96,9 +99,11 @@ def find_CV(avg_dx, g_bulk,model):
 
         # run MESHER
         cmd = 'mesher +F %s' % mesh_file
+        #cmd = '%s +F %s' % (mesherBinary, mesh_file)
         runCommandLine(cmd)        
         # run CARP
         cmd = 'carp.linux.petsc +F %s -meshname %s -simID OUTPUT_DIR'  % (carp_file, mesh_name)
+        #cmd = '%s +F %s -meshname %s -simID OUTPUT_DIR'  % (carpBinary, carp_file, mesh_name)
         runCommandLine(cmd)
         
         # calculate CV
@@ -133,20 +138,20 @@ def runCommandLine(command):
     out = r.readlines()    
     r.close()
     w.close()   
-
-def printUsage():
-    usage = "  >> Usage       : python -d <dx> -g <initial conductivity> -v <desired_velocity>"
-    print usage
-    
+   
 def printHelp():
-    help_dx  = "\t -d \t<value>\t avg resolution of mesh in um (default=100um)\n"
-    help_vel = "\t -v \t<value>\t desired conduction velocity in m/s\n"
-    help_md  = "\t -m \t<value>\t name of ionic model to test\n"
-    help_g   = "\t -g \t<value>\t start value for bulk conductivity \n"
-    help     = "  >> Description : script for tuning bulk conductivities\n  >> Parameters  :\n" + help_dx + help_vel + help_md + help_g
-    print help
+    usage    = "  >> Usage       : python -d <dx> -g <initial conductivity> -v <desired_velocity>\n"
+    help_de  = "  >> Description : script for tuning bulk conductivities\n  >> Parameters  :\n"
+    help_dx  = "\t -d <value>   --resolution=<value>   \t avg resolution of mesh in um (default=100um)\n"
+    help_vel = "\t -v <value>   --velocity=<value>     \t desired conduction velocity in m/s\n"
+    help_md  = "\t -m <model>   --model=<model         \t name of ionic model to test\n"
+    help_g   = "\t -g <value>   --glbulk=<value>       \t start value for bulk conductivity\n"
+    help_wc  = "\t --with-carp=<path_to_carp_binary>   \t specify your carp binary version\n"
+    help_wm  = "\t --with-mesher=<path_to_mesher_binary> \t specify your mesher binary version\n"
+    
+    print "%s%s%s%s%s%s%s%s" % (usage, help_de, help_dx, help_vel, help_md, help_g, help_wc, help_wm)
  
-def main(args):
+def main(argv):
 
     # default values 
     model   = "MBRDR"
@@ -155,26 +160,44 @@ def main(args):
     gel     = 0.625
     gl_bulk = gil*gel/(gil+gel)
     
-    checkCARP()
+    while len(argv) == 1:
+        printHelp(); sys.exit(1)
     
-    # usage
-    while len(args) == 1:
-        printUsage(); printHelp(); sys.exit(1)
-
-    # read variables from the command line
-    while len(args) > 1:
-        option = args[1];               del args[1]
-        if option == '-d': 
-            avgdx = int(args[1]);       del args[1]               
-        elif option == '-v':
-            vel = float(args[1]);       del args[1]
-        elif option == '-m':
-            model = args[1];            del args[1]
-        elif option == '-g':
-            gl_bulk   = float(args[1]); del args[1]
+    # command lind parsing with getopt
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hd:v:g:m:",
+                    ["help", "resolution=","velocity=","glbulk=","model=","with-carp=","with-mesher="])
+    except getopt.GetoptError, err:
+        print str(err) # option -a not recognized"
+        printHelp()
+        sys.exit(-1)
+    
+    # default options
+    carpBinary   = 'carp.linux.petsc'
+    mesherBinary = 'mesher'
+    
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            printHelp()
+            sys.exit()
+        elif o in ("-d", "--resolution"):
+            avgdx = int(a)
+        elif o in ("-v","--velocity"):
+            vel = float(a)
+        elif o in ("-g","--glbulk"):
+            gl_bulk = float(a)
+        elif o in ("-m","--model"):
+            model = str(a)
+        elif o == "--with-carp":
+            carpBinary = str(a)
+        elif o == "--with-mesher":
+            mesherBinary = str(a)
         else:
-            print args[0],': invalid option',option
-            sys.exit(1)
+            assert False, "unhandled option"
+            sys.exit(-1)
+    # end of command line parsing
+    
+    checkCARP(carpBinary, mesherBinary)
 
     CV_measured = find_CV (avgdx, gl_bulk, model)
 
