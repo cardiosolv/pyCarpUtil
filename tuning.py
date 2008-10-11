@@ -100,10 +100,12 @@ def find_CV(avg_dx, g_bulk,model, carpBinary, mesherBinary):
         # run MESHER
         #cmd = 'mesher +F %s' % mesh_file
         cmd = '%s +F %s' % (mesherBinary, mesh_file)
+        print 'running %s' % cmd
         runCommandLine(cmd)        
         # run CARP
         #cmd = 'carp.linux.petsc +F %s -meshname %s -simID OUTPUT_DIR'  % (carp_file, mesh_name)
         cmd = '%s +F %s -meshname %s -simID OUTPUT_DIR'  % (carpBinary, carp_file, mesh_name)
+        print 'running %s' % cmd
         runCommandLine(cmd)
         
         # calculate CV
@@ -173,7 +175,7 @@ def main(argv):
         sys.exit(-1)
     
     # default options
-    carpBinary   = 'carp.linux.petsc'
+    carpBinary   = 'carpe.linux.petsc'
     mesherBinary = 'mesher'
     
     for o, a in opts:
@@ -197,9 +199,9 @@ def main(argv):
             sys.exit(-1)
     # end of command line parsing
     
-    checkCARP(carpBinary, mesherBinary)
+    #checkCARP(carpBinary, mesherBinary)
 
-    CV_measured = find_CV (avgdx, gl_bulk, model)
+    CV_measured = find_CV (avgdx, gl_bulk, model, carpBinary, mesherBinary)
 
     print "    CV desired      : %8.5f m/s" % (vel)
     print "    use gbulk       : %8.5f\n" % (calculate_g (vel, CV_measured, gl_bulk))
