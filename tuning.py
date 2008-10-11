@@ -53,6 +53,8 @@ def checkCARP(carpBinary, mesherBinary):
     
     pathList = os.environ.get('PATH').split(':')
     for path in pathList:
+        if not os.access(path,os.X_OK):
+            continue
         binaryList = os.listdir(path)
         binaryList.sort()        
         if carpBinary in binaryList:
@@ -199,7 +201,7 @@ def main(argv):
             sys.exit(-1)
     # end of command line parsing
     
-    #checkCARP(carpBinary, mesherBinary)
+    checkCARP(carpBinary, mesherBinary)
 
     CV_measured = find_CV (avgdx, gl_bulk, model, carpBinary, mesherBinary)
 
