@@ -98,12 +98,12 @@ def find_CV(avg_dx, g_bulk,model, carpBinary, mesherBinary):
         my_cable.write_to_file(carp_file)
 
         # run MESHER
-        cmd = 'mesher +F %s' % mesh_file
-        #cmd = '%s +F %s' % (mesherBinary, mesh_file)
+        #cmd = 'mesher +F %s' % mesh_file
+        cmd = '%s +F %s' % (mesherBinary, mesh_file)
         runCommandLine(cmd)        
         # run CARP
-        cmd = 'carp.linux.petsc +F %s -meshname %s -simID OUTPUT_DIR'  % (carp_file, mesh_name)
-        #cmd = '%s +F %s -meshname %s -simID OUTPUT_DIR'  % (carpBinary, carp_file, mesh_name)
+        #cmd = 'carp.linux.petsc +F %s -meshname %s -simID OUTPUT_DIR'  % (carp_file, mesh_name)
+        cmd = '%s +F %s -meshname %s -simID OUTPUT_DIR'  % (carpBinary, carp_file, mesh_name)
         runCommandLine(cmd)
         
         # calculate CV
