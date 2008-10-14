@@ -24,10 +24,11 @@ class ParameterFile:
                     'cg_tol_parab'   : 1.0e-3,
                     'experiment'     : 0,
                     'gridout_i'      : 0,
-                    'num_LATs'       : 0,
+                    'num_LATs'       : 1,
                     'lats[0].ID'     : 'activation',
                     'gil'            : 0.174,
-                    'gel'            : 0.625
+                    'gel'            : 0.625,
+                    'surfvolrat'     : 0.14
                     }
             if carp_ver is 'carpm':
                 self.params['num_imp_regions'] = 1
@@ -112,6 +113,8 @@ class ParameterFile:
         f.write("# ............................................ #\n\n")
         
         f.write("# General settings\n\n")
+        # this is ugly, there must be a better fix for this
+        f.write("num_LATs = 1\n")
         for key, val in self.params.items():
             f.write("%s = %s\n" % (key, val))
     
