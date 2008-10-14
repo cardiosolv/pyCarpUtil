@@ -26,17 +26,27 @@ class ParameterFile:
                     'gridout_i'      : 0,
                     'num_LATs'       : 0,
                     'lats[0].ID'     : 'activation',
-                    'gil'            : 0.174
+                    'gil'            : 0.174,
+                    'gel'            : 0.625
                     }
             if carp_ver is 'carpm':
-                del self.params['num_regions']
                 self.params['num_imp_regions'] = 1
-                del self.params['gil']
+                self.params['imp_region[0].name'] = self.params['region[0].name']
                 self.params['num_gregions'] = 1
-                self.params['gregion[0].g_il'] = 0.174
+                self.params['gregion[0].g_il'] = self.params['gil'] 
+                self.params['gregion[0].g_el'] = self.params['gel']
+                # delete all carpe parameters
+                del self.params['num_regions']
+                del self.params['region[0].name']
+                del self.params['gil']
+                del self.params['gel']
                 del self.params['readmesh']
-            if ionicModel is not None:
-                self.params['region[0].im'] = ionicModel
+                if ionicModel is not None:
+                    self.params['imp_region[0].im'] = ionicModel  
+            else:
+                if ionicModel is not None:
+                    self.params['region[0].im'] = ionicModel
+                    
             self.num_stim = 0
             self.stimulus = []
 
@@ -84,8 +94,8 @@ class ParameterFile:
         else:
             return p[param_key]
        
-    def write_to_file(self, filename='par_file.par', carp_ver):
-        
+    def write_to_file(self, carp_ver, filename='par_file.par'):
+         
         if carp_ver is 'carpe':
           nregions = self.params['num_regions']
           reg0name = self.params['region[0].name']
