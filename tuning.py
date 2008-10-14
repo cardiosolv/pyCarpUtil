@@ -159,16 +159,18 @@ def runCommandLine(command):
     w.close()   
    
 def printHelp():
-    usage    = "  >> Usage       : python -d <dx> -g <initial conductivity> -v <desired_velocity>\n"
-    help_de  = "  >> Description : script for tuning bulk conductivities\n  >> Parameters  :\n"
+    usage    = "  >> Usage       : python -d <dx> -v <target velocity> -m <model> -i <gil> -e <gel> -b <beta>\n"
+    help_de  = "  >> Description : script for tuning tissue conductivities\n  >> Parameters  :\n"
     help_dx  = "\t -d <value>   --resolution=<value>   \t avg resolution of mesh in um (default=100um)\n"
-    help_vel = "\t -v <value>   --velocity=<value>     \t desired conduction velocity in m/s\n"
-    help_md  = "\t -m <model>   --model=<model         \t name of ionic model to test\n"
-    help_g   = "\t -g <value>   --glbulk=<value>       \t start value for bulk conductivity\n"
+    help_vel = "\t -v <value>   --velocity=<value>     \t desired conduction velocity in m/s (default=0.6)\n"
+    help_md  = "\t -m <model>   --model=<model         \t name of ionic model to test (default=MBRDR)\n"
+    help_gi  = "\t -i <value>   --gil=<value>          \t initial value for gil (default=0.174 S/m)\n"
+    help_ge  = "\t -e <value>   --gel=<value>          \t initial value for gel (default=0.625 S/m)\n"
+    help_beta= "\t -b <value>   --beta=<value>         \t surface-to-volume ratio (default=0.14 cm^-1\n"
     help_wc  = "\t --with-carp=<path_to_carp_binary>   \t specify your carp binary version\n"
     help_wm  = "\t --with-mesher=<path_to_mesher_binary> \t specify your mesher binary version\n"
     
-    print "%s%s%s%s%s%s%s%s" % (usage, help_de, help_dx, help_vel, help_md, help_g, help_wc, help_wm)
+    print "%s%s%s%s%s%s%s%s" % (usage, help_de, help_dx, help_vel, help_md, help_gi, help_ge, help_beta, help_wc, help_wm)
  
 def main(argv):
 
@@ -184,8 +186,8 @@ def main(argv):
     
     # command lind parsing with getopt
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hd:v:i:e:m:",
-                    ["help", "resolution=","velocity=","gi=","ge=","model=","with-carp=","with-mesher="])
+        opts, args = getopt.getopt(sys.argv[1:], "hd:v:i:e:b:m:",
+                    ["help", "resolution=","velocity=","gi=","ge=","beta=","model=","with-carp=","with-mesher="])
     except getopt.GetoptError, err:
         print str(err) # option -a not recognized"
         printHelp()
@@ -207,6 +209,8 @@ def main(argv):
             gil = float(a)
         elif o in ("-e","--ge"):
             gel = float(a)
+        elif o in ("-b","--beta"):
+            beta = float(a)
         elif o in ("-m","--model"):
             model = str(a)
         elif o == "--with-carp":
@@ -220,10 +224,21 @@ def main(argv):
 
     
     checkCARP(carpBinary, mesherBinary)
-    carp_ver = 'carpm'
-    CV_measured = find_CV (avgdx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver)
-    gl_bulk     = gil*gel/(gil+gel)
-    gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
+    carp_ver    = 'carpm'
+
+    eps         = vel*0.05
+    CV_measured = 0.
+    its         = 0
+    while abs(vel-CV_measured)>eps:
+        CV_measured = find_CV (avgdx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver)
+        gl_bulk     = gil*gel/(gil+gel)
+        gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
+        gil         = gel*gl_bulk/(gel-gl_bulk)
+        delta_abs   = vel-CV_measured
+        delta_rel   = delta_abs/vel
+        its        += 1
+        print "    Iteration        : %d: %.4f %.4f %.2f %.2f ()\n" % (its,vel,CV_measured,delta_abs,delta_rel)
+         
 
     print "    CV desired       : %8.5f m/s" % (vel)
     print "    bulk conductivity: %8.5f \n" % (gl_bulk)
