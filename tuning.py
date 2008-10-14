@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import pdb
 import os, sys, popen2, getopt
 from carptools.msh_file import MeshFile
 from carptools.par_file import ParameterFile
@@ -15,9 +14,10 @@ class CableTest(ParameterFile):
     """
     Base class for the cable to run the tuning simulations
     """
-    def __init__(self, im, gil, gel, vs):
+    def __init__(self, im, gil, gel, beta, vs):
         ParameterFile.__init__(self, ionicModel=im, carp_ver=vs)
 
+        self.set_parameter('surfvolrat',  beta)
         self.set_parameter('solnmethod',  4)
         self.set_parameter('gridout_i',   2)
         self.set_parameter('dt',          10)
@@ -28,6 +28,7 @@ class CableTest(ParameterFile):
         self.set_parameter('num_LATs',    1)
         self.set_parameter('lats[0].ID',  'activation')
         self.set_parameter('tend',        200)
+
 
         # version specific settings
         if vs is 'carpe':
@@ -75,11 +76,12 @@ def checkCARP(carpBinary, mesherBinary):
     if not carp:   print "carp.linux.petsc was NOT found in $PATH"; exit(-1)
     if not mesher: print "mesher was NOT found in $PATH"; exit(-1)
 
-def find_CV(avg_dx, gil, gel, model, carpBinary, mesherBinary, carp_ver):
+def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
     """
     Input: avg_dx - mesh resolution as a scalar or list (list - Not implemented yet)
            gil    - intracellular conductivity along the cable
            gel    - intracellular conductivity along the cable
+           beta   - surface-to-volume ratio
     Output:
            cv_measured in a 1cm long cable with avg_dx of resolution and using
            the value of g_bulk as conductivity
@@ -105,7 +107,7 @@ def find_CV(avg_dx, gil, gel, model, carpBinary, mesherBinary, carp_ver):
         my_mesh = MeshFile(mesh_name, size0=xsize, size1=yzsize, size2=yzsize, element=1, resolution=res)
         my_mesh.write_to_file(mesh_file)
 
-        my_cable = CableTest(model, gil, gel, carp_ver)
+        my_cable = CableTest(model, gil, gel, beta, carp_ver)
         my_cable.write_to_file(carp_ver,carp_file)
 
         # run MESHER
@@ -125,7 +127,6 @@ def find_CV(avg_dx, gil, gel, model, carpBinary, mesherBinary, carp_ver):
         cvList.append( condVelocity(sim_pts, sim_act, output=False) )
     
     # print information
-    pdb.set_trace()
     print "\n S i m u l a t i o n   d e t a i l s\n"
     if len(resList) == 1:
         print "    mesh resolution  :  %d um" % resList[0]
@@ -176,6 +177,7 @@ def main(argv):
     avgdx   = 100
     gil     = 0.174
     gel     = 0.625
+    beta    = 0.14
     
     while len(argv) == 1:
         printHelp(); sys.exit(1)
@@ -219,8 +221,7 @@ def main(argv):
     
     checkCARP(carpBinary, mesherBinary)
     carp_ver = 'carpm'
-
-    CV_measured = find_CV (avgdx, gil, gel, model, carpBinary, mesherBinary, carp_ver)
+    CV_measured = find_CV (avgdx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver)
     gl_bulk     = gil*gel/(gil+gel)
     gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
 
