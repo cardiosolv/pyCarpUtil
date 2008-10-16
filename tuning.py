@@ -139,7 +139,7 @@ def main(argv):
     mesherBinary = 'mesher'
     carp_version = 'carpm'
     
-    while len(argv) == 1:
+    if len(argv) == 1:
         printHelp(); sys.exit(1)
     
     # command lind parsing with getopt
