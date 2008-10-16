@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import os, sys, popen2, getopt
+import os, sys, getopt
 from carptools.msh_file import MeshFile
 from carptools.par_file import ParameterFile
 from condVelocity import condVelocity
+from sctools import check_path, run_command_line
 
-import pdb
+DEBUG = False
 
 """
 Bernardo M. Rocha, 2008
@@ -29,7 +30,6 @@ class CableTest(ParameterFile):
         self.set_parameter('lats[0].ID',  'activation')
         self.set_parameter('tend',        200)
 
-
         # version specific settings
         if vs is 'carpe':
           self.set_parameter('readmesh',  3)
@@ -42,6 +42,8 @@ class CableTest(ParameterFile):
 
         self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
 
+# end of CableTest
+
 def calculate_g(v1,v0,g0):
     """
     Input:  v1 - desired conduction velocity
@@ -52,35 +54,11 @@ def calculate_g(v1,v0,g0):
     """
     return g0 * ((v1/v0)*(v1/v0))
 
-def checkCARP(carpBinary, mesherBinary):
-    """
-    Purpose: find if the user has the specified/default
-    carp and mesher binaries in order to run the simulations
-    """
-    carp   = False
-    mesher = False
-    
-    pathList = os.environ.get('PATH').split(':')
-    for path in pathList:
-        if not os.access(path,os.X_OK):
-            continue
-        binaryList = os.listdir(path)
-        binaryList.sort()        
-        if carpBinary in binaryList:
-            carp = True
-            #print os.path.join(path,carpBinary)
-        if mesherBinary in binaryList:
-            mesher = True
-            #print os.path.join(path,mesherBinary)
-
-    if not carp:   print "carp.linux.petsc was NOT found in $PATH"; exit(-1)
-    if not mesher: print "mesher was NOT found in $PATH"; exit(-1)
-
 def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
     """
     Input: avg_dx - mesh resolution as a scalar or list (list - Not implemented yet)
            gil    - intracellular conductivity along the cable
-           gel    - intracellular conductivity along the cable
+           gel    - extracellular conductivity along the cable
            beta   - surface-to-volume ratio
     Output:
            cv_measured in a 1cm long cable with avg_dx of resolution and using
@@ -111,66 +89,40 @@ def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
         my_cable.write_to_file(carp_ver,carp_file)
 
         # run MESHER
-        #cmd = 'mesher +F %s' % mesh_file
         cmd = '%s +F %s' % (mesherBinary, mesh_file)
-        print 'running %s' % cmd
-        runCommandLine(cmd)        
+        if DEBUG: print 'running %s' % cmd
+        run_command_line(cmd)        
         # run CARP
-        #cmd = 'carp.linux.petsc +F %s -meshname %s -simID OUTPUT_DIR'  % (carp_file, mesh_name)
         cmd = '%s +F %s -meshname %s -simID OUTPUT_DIR'  % (carpBinary, carp_file, mesh_name)
-        print 'running %s' % cmd
-        runCommandLine(cmd)
+        if DEBUG: print 'running %s' % cmd
+        run_command_line(cmd)
         
         # calculate CV
         sim_pts = "OUTPUT_DIR/%s_i.pts" % mesh_name
         sim_act = "OUTPUT_DIR/activation-thresh.dat"    
         cvList.append( condVelocity(sim_pts, sim_act, output=False) )
     
-    # print information
-    print "\n S i m u l a t i o n   d e t a i l s\n"
-    if len(resList) == 1:
-        print "    mesh resolution  :  %d um" % resList[0]
-        print "    ionic model      :  %s" % model
-        print "    gil              : %8.5f" % gil
-        print "    gel              : %8.5f" % gel
-        print "    gl_bulk          : %8.5f" % (gil*gel/(gil+gel))
-        print "    CV measured      : %8.5f m/s" % cvList[0]
-        return cvList[0]
-    else:
-        print "    mesh resolution  : ", resList
-        print "    gil              : %8.5f" % gil
-        print "    gel              : %8.5f" % gel
-        print "    gl_bulk          : %8.5f" % gil*gel/(gil*gel)
-        print "    CV measured      : ", cvList, " m/s\n"
-        return cvList
+    if len(resList) == 1: return cvList[0]
+    return cvList
 
 def run_simulation():
     # try to implement and then use map
     pass
-
-def runCommandLine(command):
-    """
-    Run a command line and capture the stdout and stderr and print if
-    print_output is True.
-    """
-    r,w = popen2.popen4(command)
-    out = r.readlines()    
-    r.close()
-    w.close()   
-   
+  
 def printHelp():
-    usage    = "  >> Usage       : python -d <dx> -v <target velocity> -m <model> -i <gil> -e <gel> -b <beta>\n"
-    help_de  = "  >> Description : script for tuning tissue conductivities\n  >> Parameters  :\n"
-    help_dx  = "\t -d <value>   --resolution=<value>   \t avg resolution of mesh in um (default=100um)\n"
-    help_vel = "\t -v <value>   --velocity=<value>     \t desired conduction velocity in m/s (default=0.6)\n"
-    help_md  = "\t -m <model>   --model=<model         \t name of ionic model to test (default=MBRDR)\n"
-    help_gi  = "\t -i <value>   --gil=<value>          \t initial value for gil (default=0.174 S/m)\n"
-    help_ge  = "\t -e <value>   --gel=<value>          \t initial value for gel (default=0.625 S/m)\n"
-    help_beta= "\t -b <value>   --beta=<value>         \t surface-to-volume ratio (default=0.14 cm^-1\n"
-    help_wc  = "\t --with-carp=<path_to_carp_binary>   \t specify your carp binary version\n"
-    help_wm  = "\t --with-mesher=<path_to_mesher_binary> \t specify your mesher binary version\n"
-    
-    print "%s%s%s%s%s%s%s%s" % (usage, help_de, help_dx, help_vel, help_md, help_gi, help_ge, help_beta, help_wc, help_wm)
+    print """
+  >> Usage       : python -d <dx> -v <target velocity> -m <model> -i <gil> -e <gel> -b <beta>
+  >> Description : script for tuning tissue conductivities\n  >> Parameters  :
+  \t -d <value>   --resolution=<value>   \t avg resolution of mesh in um       \t (default=100um)
+  \t -v <value>   --velocity=<value>     \t desired conduction velocity in m/s \t (default=0.6)
+  \t -m <model>   --model=<model         \t name of ionic model to test        \t (default=MBRDR)
+  \t -i <value>   --gil=<value>          \t initial value for gil              \t (default=0.174 S/m)
+  \t -e <value>   --gel=<value>          \t initial value for gel              \t (default=0.625 S/m)
+  \t -b <value>   --beta=<value>         \t surface-to-volume ratio            \t (default=0.14 cm^-1)
+  \t -t <value>   --tol=<value>          \t tolerance - percentage of error    \t (default=0.05)
+  \t --with-carp = <path_to_carp_binary>   \t specify your carp version
+  \t --with-mesher=<path_to_mesher_binary> \t specify your mesher version
+  """
  
 def main(argv):
 
@@ -180,22 +132,24 @@ def main(argv):
     gil     = 0.174
     gel     = 0.625
     beta    = 0.14
+    tol     = 0.05
+    
+    checkBin     = True
+    carpBinary   = 'carp.linux.petsc'
+    mesherBinary = 'mesher'
+    carp_version = 'carpm'
     
     while len(argv) == 1:
         printHelp(); sys.exit(1)
     
     # command lind parsing with getopt
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hd:v:i:e:b:m:",
-                    ["help", "resolution=","velocity=","gi=","ge=","beta=","model=","with-carp=","with-mesher="])
+        opts, args = getopt.getopt(sys.argv[1:], "hd:v:i:e:b:m:t:",
+                    ["help", "resolution=","velocity=","gi=","ge=","beta=","model=","tol=","with-carp=","with-mesher="])
     except getopt.GetoptError, err:
         print str(err) # option -a not recognized"
         printHelp()
         sys.exit(-1)
-    
-    # default options
-    carpBinary   = 'carpm.linux.petsc'
-    mesherBinary = 'mesher'
     
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -211,37 +165,53 @@ def main(argv):
             gel = float(a)
         elif o in ("-b","--beta"):
             beta = float(a)
+        elif o in ("-t","--tol"):
+            tol = float(a)
         elif o in ("-m","--model"):
             model = str(a)
         elif o == "--with-carp":
             carpBinary = str(a)
+            checkBin   = False
         elif o == "--with-mesher":
             mesherBinary = str(a)
+            checkBin     = False
         else:
             assert False, "unhandled option"
             sys.exit(-1)
     # end of command line parsing
-
     
-    checkCARP(carpBinary, mesherBinary)
-    carp_ver    = 'carpm'
+    if (checkBin):
+        check_path (carpBinary)
+        check_path (mesherBinary)
 
-    eps         = vel*0.05
+    # settings    
+    eps = vel * tol    
+    its = 1
     CV_measured = 0.
-    its         = 0
-    while abs(vel-CV_measured)>eps:
-        CV_measured = find_CV (avgdx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver)
+    
+    print "\n S i m u l a t i o n   s e t t i n g s\n"
+    print "    ionic model      :  %s" % model
+    print "    mesh resolution  :  %s" % avgdx
+    print "    CV desired       : %8.5f m/s" % (vel)
+    print "    tolerance        :  %.4f" % tol
+    print "\n S i m u l a t i n g ...\n"
+    
+    while abs(vel - CV_measured) > eps:
+        print "    Iteration  %d: gil =%8.5f, gel =%8.5f, gl_bulk =%8.5f" % (its,gil,gel,(gil*gel/gil+gel)),
+        sys.stdout.flush()
+        
+        CV_measured = find_CV (avgdx, gil, gel, beta, model, carpBinary, mesherBinary, carp_version)
+        print " --->  CV measured : %8.5f m/s" % CV_measured
+        
         gl_bulk     = gil*gel/(gil+gel)
         gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
         gil         = gel*gl_bulk/(gel-gl_bulk)
         delta_abs   = vel-CV_measured
         delta_rel   = delta_abs/vel
         its        += 1
-        print "    Iteration        : %d: %.4f %.4f %.2f %.2f ()\n" % (its,vel,CV_measured,delta_abs,delta_rel)
-         
-
-    print "    CV desired       : %8.5f m/s" % (vel)
-    print "    bulk conductivity: %8.5f \n" % (gl_bulk)
+    
+    print "\n S i m u l a t i o n   r e s u l t s\n"    
+    print "    bulk conductivity: %8.5f"          % (gl_bulk)
     print "    use gi/ge        : %8.5f %8.5f \n" % (gel*gl_bulk/(gel-gl_bulk), gel)
 
 if __name__ == "__main__":

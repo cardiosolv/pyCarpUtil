@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
-import sys
-from os import remove
+import os, sys, popen2
 from numpy import arange, loadtxt
 from scipy.io import write_array
 from scipy.io import read_array
 
 def iseq(start=0, stop=None, inc=1):
     """
-    Generate integer from start to (and including) stop
+    Purpose: Generate integer from start to (and including) stop
     with increment of inc. Alternative to range/xrange.
     """
     if stop == None:
@@ -17,17 +16,17 @@ def iseq(start=0, stop=None, inc=1):
 
 def sequence(start, stop, inc):
     """
-    Generate float sequence from start to (and including) stop
+    Purpose: Generate float sequence from start to (and including) stop
     with increment of inc. Alternative to arange.
     """
     return arange(start, stop+inc, inc)
 
 def read_array_pts(ptsFile):
     """
-    Function to read a .pts file from CARP simulator, where the first line contains
+    Purpose: Function to read a .pts file from CARP simulator, where the first line contains
     the number of nodes and the remaining file contains the array of nodes
     
-    Example of usage:
+    Example:
     from sctools import read_array_pts
     nn, narray = read_array_pts("t0010um_i.pts")
     print nn
@@ -35,7 +34,7 @@ def read_array_pts(ptsFile):
     print narray[:,1]
     print narray[:,2]
     
-    Bernardo Martins Rocha, 2008
+    Bernardo M. Rocha, 2008
     """
     try:
         f = open(ptsFile)
@@ -65,6 +64,39 @@ def read_array_pts(ptsFile):
         print " error read_array_pts(): the size of the array doesn't match"
         exit(-2)
     
-    remove(nodesTmp)
+    os.remove(nodesTmp)
             
     return nodes
+
+# end of read_array_pts
+
+def run_command_line(command):
+    """
+    Purpose: Run a command line and capture the stdout and stderr
+    """
+    r,w = popen2.popen4(command)
+    out = r.readlines()
+    r.close()
+    w.close()
+
+# end of runCommandLine
+
+def check_path(prog_name):
+    """
+    Purpose: find if the user has the prog_name in his $PATH
+    """
+    prog = False    
+    pathList = os.environ.get('PATH').split(':')
+    for path in pathList:
+        if not os.access(path,os.X_OK):
+            continue
+        binaryList = os.listdir(path)
+        binaryList.sort()
+        if prog_name in binaryList:
+            prog = True
+            #if DEBUG: print "%s path=%s" % (prog_name, os.path.join(path,carpBinary))
+    if not prog:
+        print "Error: %s was not found in your $PATH" % (prog_name)
+        exit(-1)
+        
+# end of check_path
