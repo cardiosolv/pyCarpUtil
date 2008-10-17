@@ -70,12 +70,13 @@ def read_array_pts(ptsFile):
 
 # end of read_array_pts
 
-def run_command_line(command):
+def run_command_line(command, output=False):
     """
     Purpose: Run a command line and capture the stdout and stderr
     """
     r,w = popen2.popen4(command)
     out = r.readlines()
+    if output: print out
     r.close()
     w.close()
 
