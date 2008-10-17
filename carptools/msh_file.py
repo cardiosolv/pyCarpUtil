@@ -61,6 +61,10 @@ class MeshFile:
         f.write("size[2] = %.3f\n" % size2)
         f.write("\n# element type\n")
         f.write("Elem3D = %1d\n" % element)
+        
+        if self.params['tri2D'] == 1:
+            f.write("tri2D = 1\n")
+        
         f.write("\n# mesh resolution \n")
         f.write("resolution[0] = %04d\n" % res)
         f.write("resolution[1] = %04d\n" % res)

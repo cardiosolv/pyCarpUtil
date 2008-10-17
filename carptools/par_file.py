@@ -24,8 +24,8 @@ class ParameterFile:
                     'cg_tol_parab'   : 1.0e-3,
                     'experiment'     : 0,
                     'gridout_i'      : 0,
-                    'num_LATs'       : 1,
-                    'lats[0].ID'     : 'activation',
+                    #'num_LATs'       : 1,                         # deprecated
+                    #'lats[0].ID'     : 'activation',              # deprecated
                     'gil'            : 0.174,
                     'gel'            : 0.625,
                     'surfvolrat'     : 0.14
@@ -49,7 +49,9 @@ class ParameterFile:
                     self.params['region[0].im'] = ionicModel
                     
             self.num_stim = 0
+            self.num_LATs = 0
             self.stimulus = []
+            self.LATs     = []
 
         else:
             self.parseBaseFile(baseFile)
@@ -72,6 +74,18 @@ class ParameterFile:
             'z0'       : z0
         }
         self.stimulus.append(dic_stim)
+    
+    def add_LAT(self, id, measurand=None, all=None, threshold=None, method=None):
+        """
+        Local activation measurements - CARP array parameter
+        """
+        self.num_LATs = self.num_LATs + 1
+        dic_LAT = {'ID' : id}
+        if measurand is not None: dic_LAT['measurand'] = measurand
+        if all       is not None: dic_LAT['all'] = all
+        if threshold is not None: dic_LAT['threshold'] = threshold
+        if method    is not None: dic_LAT['method'] = method
+        self.LATs.append(dic_LAT)
     
     def set_parameter(self, param_key, value):
         """
@@ -113,9 +127,13 @@ class ParameterFile:
         f.write("# ............................................ #\n\n")
         
         f.write("# General settings\n\n")
+        
         # this is ugly, there must be a better fix for this
-        f.write("num_LATs = 1\n")
-        for key, val in self.params.items():
+        #f.write("num_LATs = 1\n")
+        
+        sortedKeys  = sorted(self.params.keys())        
+        for key in sortedKeys:
+            val = self.params[key]
             f.write("%s = %s\n" % (key, val))
     
         f.write("\n# Stimulus\n\n")
@@ -125,6 +143,15 @@ class ParameterFile:
             stim_str = "stimulus[%1d]." % stim_cont
             for key, val in stim.items():
                 f.write("%s%s = %s\n" % (stim_str, key, val))
+        
+        if len(self.LATs) > 0:
+            f.write("\n# LATs\n\n")
+            f.write("num_LATs = %s\n" % self.num_LATs)
+            lats_cont = 0
+            for lats in self.LATs:
+                lats_str = "lats[%1d]." % lats_cont
+                for key, val in lats.items():
+                    f.write("%s%s = %s\n" % (lats_str, key, val))
 
         f.close()
 
@@ -142,13 +169,15 @@ if __name__ == "__main__":
     mypar.set_parameter('spacedt',1)
     mypar.set_parameter('CN_parab',1)
     mypar.set_parameter('cg_tol_parab',1.0e-06)
-    mypar.set_parameter('num_LATs',1)
-    mypar.set_parameter('lats[0].ID', 'activation')
     mypar.set_parameter('gil',0.178077495)
+    
     # depends on the simulation
     mypar.set_parameter('tend',200)
-    # add stimulus    
-    mypar.add_stimulus(0, 0, 5e-3, 1, 1100, 1100, 100, -550, -550, -10099)
+    
+    # add stimulus and LATs
+    mypar.add_stimulus (0, 0, 5e-3, 1, 1100, 1100, 100, -550, -550, -10099)    
+    mypar.add_LAT ('activation')
+    
     # write
-    mypar.write_to_file('example_lr2f_simulation.par')
+    mypar.write_to_file('example_lr2f_simulation.par')    
     
