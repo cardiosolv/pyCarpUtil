@@ -8,6 +8,7 @@ from sctools import check_path, run_command_line
 DEBUG = False
 
 """
+A simple script for tuning conduction velocities for bidomain/monodomain models
 Bernardo M. Rocha, 2008
 """
 
