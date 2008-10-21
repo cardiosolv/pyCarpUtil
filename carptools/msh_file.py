@@ -16,8 +16,8 @@ class MeshFile:
                 'size[0]'      : size0,
                 'size[1]'      : size1,
                 'size[2]'      : size2,
-                'Elem3D'       : element,
-                'tri2D'        : tri2d,
+                'Elem3D'       : element,    # Element type to generate: 0->Tets, 1->Hex
+                'tri2D'        : tri2d,      # Generate tris instead of quads in 2D
                 'resolution[0]': resolution,
                 'resolution[1]': resolution,
                 'resolution[2]': resolution
