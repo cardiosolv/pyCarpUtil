@@ -26,8 +26,8 @@ class CableTest(ParameterFile):
         self.set_parameter('spacedt',     1)
         self.set_parameter('CN_parab',    1)
         self.set_parameter('cg_tol_parab',1.0e-06)
-        self.set_parameter('num_LATs',    1)
-        self.set_parameter('lats[0].ID',  'activation')
+        #self.set_parameter('num_LATs',    1)
+        #self.set_parameter('lats[0].ID',  'activation')
         self.set_parameter('tend',        200)
 
         # version specific settings
@@ -40,6 +40,7 @@ class CableTest(ParameterFile):
           self.set_parameter('gregion[0].g_il', gil)
           self.set_parameter('gregion[0].g_el', gel)
 
+        self.add_LAT ('activation')
         self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
 
 # end of CableTest
