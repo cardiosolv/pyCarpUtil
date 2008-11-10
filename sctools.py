@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, popen2
+import os, sys, popen2, subprocess
 from numpy import arange, loadtxt
 from scipy.io import write_array
 from scipy.io import read_array
@@ -70,9 +70,23 @@ def read_array_pts(ptsFile):
 
 # end of read_array_pts
 
-def run_command_line(command, output=False):
+def run_command_line (command, output=False):
     """
     Purpose: Run a command line and capture the stdout and stderr
+    """   
+    proc = subprocess.Popen(command,shell=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT
+                        )
+    stdout_value, stderr_value = proc.communicate()
+    if output: print '\tcombined output:', repr(stdout_value)
+
+# end of run_command_line
+
+def run_command_line_old(command, output=False):
+    """
+    Purpose: Run a command line and capture the stdout and stderr
+    Deprecated: the use of popen2.popen4 will not be supported in Python 3
     """
     r,w = popen2.popen4(command)
     out = r.readlines()
@@ -80,7 +94,7 @@ def run_command_line(command, output=False):
     r.close()
     w.close()
 
-# end of runCommandLine
+# end of run_command_line
 
 def check_path(prog_name):
     """

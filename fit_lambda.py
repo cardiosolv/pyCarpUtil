@@ -3,7 +3,7 @@
 import os, pdb
 from pylab import *
 from scipy.optimize import leastsq
-from read_array_pts import *
+from sctools import read_array_pts
 from igb.igb_read import read_igb_slice
 
 def fit_lambda(igb_file, pts_file, resolution=100):
@@ -27,8 +27,7 @@ def fit_lambda(igb_file, pts_file, resolution=100):
     lindx = [i for i in xrange(size) if ytmp[i] == aux and ztmp[i] == aux]
 
     value1 = Vm[:,100]
-    
-    
+  
     x     = zeros((len(lindx))) # space
     data  = zeros((len(lindx))) # vm at t=100ms    
     
@@ -49,10 +48,7 @@ def fit_lambda(igb_file, pts_file, resolution=100):
     def residuals(p,data,x):
         err = data - dbexpl(x,p)
         return err
-        
-	
-    pdb.set_trace()
-    
+           
     ### vm curve fitting ###
     p0         = [10,1000]                                          # initial guesses
     guessfit   = dbexpl(x,p0)                                       # data evaluated with p0
@@ -60,7 +56,7 @@ def fit_lambda(igb_file, pts_file, resolution=100):
     bestparams = pbest[0]                                           # solution (estimated parameters)
     cov_x      = pbest[1]                                           # estimate of the covariance matrix of the solution
     
-    print ' \nbest fit parameters ' , bestparams
+    print 'Best fit parameters: ' , bestparams
     #print cov_x
     
     datafit = dbexpl(x,bestparams)
