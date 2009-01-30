@@ -2,6 +2,7 @@
 
 import os, sys, getopt
 import subprocess
+import glob 
 
 ext = 'png'
 pos = ('NW','N','NE','W','C','E','SW','S','SE')
@@ -36,9 +37,11 @@ def brand_movie(base_name, logo_name, position):
   
   im_position = imp[imp_index]
   
-  ### TODO: figure out the range ###
+  # figure out list of files that match pattern 
+  pat = '%s*' % (base_name)
+  lst = glob.glob(pat);
   inc = 2
-  images_range = xrange(0,110,inc)
+  images_range = xrange(0,len(lst),inc)
   
   list_name = 'list.txt'
   file_list = open(list_name,'w')
@@ -57,7 +60,7 @@ def brand_movie(base_name, logo_name, position):
     cmd = ["composite", "-gravity", im_position, logo_name, f, o]
     retval = subprocess.call(cmd)      
     
-    ### why convert to JPG? mencoder can use png as well ###
+    # convert to jpg first to strip alpha channel in pngs
     if (dirname != ''):
       ifile = '%s/b_%s%05d.png' % (dirname,filename,i)
       ofile = '%s/b_%s%05d.jpg' % (dirname,filename,i)
