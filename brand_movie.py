@@ -86,7 +86,7 @@ def brand_movie(base_name, logo_name, position):
   
   # execute mencoder
   cmd = ["mencoder", \
-          "mf://@%s" % list_name,\
+          "mf://@%s" % temp_name,\
           "-mf", "w=800:h=600:fps=25:type=png",\
           "-ovc" ,"lavc",\
           "-oac", "copy",\
