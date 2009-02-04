@@ -10,13 +10,12 @@ imp = ('NorthWest', 'North', 'NorthEast', 'West', 'Center', 'East', 'SouthWest',
 
 """
 A simple script to make a movie with a brand/logo
+
+Bernardo M. Rocha, Gernot Plank
+January 2009
 """
 
 def brand_movie(base_name, logo_name, position):
-  
-  # extract file name and directory
-  dirname  = os.path.dirname(base_name)
-  filename = os.path.basename(base_name) 
   
   # create error and output log file
   outFile = os.path.join(os.curdir, "output.log")
@@ -25,8 +24,7 @@ def brand_movie(base_name, logo_name, position):
   errFile = os.path.join(os.curdir, "error.log")
   errptr = file(errFile, "w")
   
-  # NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast
-  # NW, N, NE, W, C, E, SW, S, SE
+  # check position
   if position not in pos:
     print 'Error: the position %s is undefined.' % position
     sys.exit(1)
@@ -38,48 +36,53 @@ def brand_movie(base_name, logo_name, position):
   im_position = imp[imp_index]
   
   # figure out list of files that match pattern 
-  pat = '%s*' % (base_name)
-  lst = glob.glob(pat);
-  inc = 2
-  images_range = xrange(0,len(lst),inc)
-  
-  list_name = 'list.txt'
-  file_list = open(list_name,'w')
-   
-  for i in images_range:
+  pattern = '%s*' % (base_name)
+  file_list = glob.glob(pattern)
+  file_list.sort()
+
+  i = 0
+  for f in file_list:
     print ' processing image %05d...' % (i)
-    
-    # use_composite (ImageMagick)
-    if (dirname != ''):
-      f = '%s/%s%05d.%s'   % (dirname,filename,i,ext)
-      o = '%s/b_%s%05d.%s' % (dirname,filename,i,ext)
-    else:
-      f = '%s%05d.%s' % (filename,i,ext)
-      o = 'b_%s' % f
    
+    # use_composite (ImageMagick)
+    dirname  = os.path.dirname(f)
+    filename = os.path.basename(f) 
+      
+    if (dirname != ''):
+      o = '%s/b_%s' % (dirname,filename)
+    else:
+      o = 'b_%s' % f
+
     cmd = ["composite", "-gravity", im_position, logo_name, f, o]
     retval = subprocess.call(cmd)      
-    
+
     # convert to jpg first to strip alpha channel in pngs
+    fnoext = filename.split('.')
+    fnoext = fnoext[0]
+    
     if (dirname != ''):
-      ifile = '%s/b_%s%05d.png' % (dirname,filename,i)
-      ofile = '%s/b_%s%05d.jpg' % (dirname,filename,i)
+      ifile = '%s/b_%s' % (dirname,filename)
+      ofile = '%s/b_%s.jpg' % (dirname,fnoext)
     else:
-      ifile = 'b_%s%05d.png' % (filename,i)
-      ofile = 'b_%s%05d.jpg' % (filename,i)
+      ifile = 'b_%s' % (filename)
+      ofile = 'b_%s.jpg' % (fnoext)
 
     cmd = ["convert", ifile, ofile]
     retval = subprocess.call(cmd)
-    
+
     cmd = ["convert", ofile, ifile]
     retval = subprocess.call(cmd)
-    
-    file_list.write('%s\n' % (ifile))
+  
+    i = i + 1
     
   # end of image range loop
     
-  # finally convert to a movie  
-  file_list.close()
+  # write temporary file with filenames to convert into a movie
+  temp_name = 'list.txt'
+  fptr = open(temp_name,'w')
+  for f in file_list:
+    fptr.write('%s\n' % f)
+  fptr.close()
   
   # execute mencoder
   cmd = ["mencoder", \
@@ -99,9 +102,9 @@ def brand_movie(base_name, logo_name, position):
   else:
     os.remove(outFile)
     os.remove(errFile)
-  
+
   # remove temporary list
-  os.remove(list_name)
+  os.remove(temp_name)
   
 # end of brand_movie
 
