@@ -39,6 +39,9 @@ def brand_movie(base_name, logo_name, position):
   pattern = '%s*' % (base_name)
   file_list = glob.glob(pattern)
   file_list.sort()
+  
+  temp_name = 'list.txt'
+  fptr = open(temp_name,'w')
 
   i = 0
   for f in file_list:
@@ -54,7 +57,9 @@ def brand_movie(base_name, logo_name, position):
       o = 'b_%s' % f
 
     cmd = ["composite", "-gravity", im_position, logo_name, f, o]
-    retval = subprocess.call(cmd)      
+    retval = subprocess.call(cmd)
+    
+    fptr.write('%s\n' % o)
 
     # convert to jpg first to strip alpha channel in pngs
     fnoext = filename.split('.')
@@ -77,11 +82,6 @@ def brand_movie(base_name, logo_name, position):
     
   # end of image range loop
     
-  # write temporary file with filenames to convert into a movie
-  temp_name = 'list.txt'
-  fptr = open(temp_name,'w')
-  for f in file_list:
-    fptr.write('%s\n' % f)
   fptr.close()
   
   # execute mencoder
