@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 
-import os, sys, popen2, subprocess
-from numpy import arange, loadtxt
+import os, sys, popen2, subprocess, pdb
+from numpy import arange, loadtxt, zeros, array, mean
 from scipy.io import write_array
 from scipy.io import read_array
+from scipy import array as sarray
+
+"""
+A set of useful functions for reading files, executing command lines,
+generates integer and float sequences and so on.
+
+Bernardo M. Rocha, 2008
+"""
+
+carpElemLabelNumNode = {'Tt': 4, 'Hx': 8, 'Oc': 6, 'Py': 5,
+                        'Pr': 6, 'Qd': 4, 'Tr': 3, 'Ln': 2}
 
 def iseq(start=0, stop=None, inc=1):
     """
@@ -23,8 +34,9 @@ def sequence(start, stop, inc):
 
 def read_array_pts(ptsFile):
     """
-    Purpose: Function to read a .pts file from CARP simulator, where the first line contains
-    the number of nodes and the remaining file contains the array of nodes
+    Purpose: Function to read a .pts file from CARP simulator, where the first
+    line contains the number of nodes and the remaining lines contain
+    the array of nodes
     
     Example:
     from sctools import read_array_pts
@@ -33,8 +45,6 @@ def read_array_pts(ptsFile):
     print narray[:,0]
     print narray[:,1]
     print narray[:,2]
-    
-    Bernardo M. Rocha, 2008
     """
     try:
         f = open(ptsFile)
@@ -69,6 +79,33 @@ def read_array_pts(ptsFile):
     return nodes
 
 # end of read_array_pts
+
+<<<<<<< .mine
+def read_array_elem(elemFile):
+=======
+def run_command_line (command, output=False):
+>>>>>>> .r50
+    """
+    Purpose: Function to read a .elem file from CARP, where the first
+    line contains the number of elements and the remaining lines contain
+    the element conectivity
+    
+    Returns a list
+    """
+    f = open(elemFile)
+    
+    # extract number of elements
+    header = f.readline()
+    numElements = int(header.strip())
+    
+    # extract element list
+    elemList = [(line.strip()).split(' ') for line in f.readlines()]
+    
+    f.close()
+    
+    return elemList
+
+# end of read_array_elem
 
 def run_command_line (command, output=False):
     """
@@ -115,3 +152,22 @@ def check_path(prog_name):
         exit(-1)
         
 # end of check_path
+
+def get_element_center(nodeList, xyz):
+    """
+    Get the centroid of an element given the local node list and the array of
+    global coordinates
+    """
+    x = zeros(len(nodeList))
+    y = zeros(len(nodeList))
+    z = zeros(len(nodeList))
+    
+    for i in xrange(len(nodeList)):
+        index = nodeList[i]
+        x[i] = xyz[index,0]
+        y[i] = xyz[index,1]
+        z[i] = xyz[index,2]
+    
+    return array([mean(x),mean(y),mean(z)])
+
+# end of getElementCenter

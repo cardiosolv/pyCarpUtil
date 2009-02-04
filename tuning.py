@@ -75,11 +75,18 @@ def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
     elif isinstance(avg_dx,int) or isinstance(avg_dx,float):
         resList.append(avg_dx)    
 
+    # temporary files setttings
+    if os.name == 'posix':
+        temp_dir = '/tmp'
+    else:
+        temp_dir = ''
+
     # settings
     xsize = 1.0 # cm
-    mesh_file = "expMesh.par"
-    mesh_name = "mesh4exp"
-    carp_file = "expParam.par"    
+    mesh_name = "%s/mesh4exp"     % (temp_dir)
+    mesh_file = "%s/expMesh.par"  % (temp_dir)
+    carp_file = "%s/expParam.par" % (temp_dir)
+    outp_dir = "%s/OUTPUT_DIR"    % (temp_dir)
 
     for res in resList:
         
@@ -96,13 +103,13 @@ def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
         if DEBUG: print 'running %s' % cmd
         run_command_line(cmd)        
         # run CARP
-        cmd = '%s +F %s -meshname %s -simID OUTPUT_DIR'  % (carpBinary, carp_file, mesh_name)
+        cmd = '%s +F %s -meshname %s -simID %s'  % (carpBinary, carp_file, mesh_name, outp_dir)
         if DEBUG: print 'running %s' % cmd
         run_command_line(cmd)
         
         # calculate CV
-        sim_pts = "OUTPUT_DIR/%s_i.pts" % mesh_name
-        sim_act = "OUTPUT_DIR/activation-thresh.dat"    
+        sim_pts = "%s/%s_i.pts" % (outp_dir, mesh_name)
+        sim_act = "%s/activation-thresh.dat" % (outp_dir)
         cvList.append( condVelocity(sim_pts, sim_act, output=False) )
     
     if len(resList) == 1: return cvList[0]
@@ -140,7 +147,7 @@ def main(argv):
     checkBin     = True
     carpBinary   = 'carp.linux.petsc'
     mesherBinary = 'mesher'
-    carp_version = 'carpm'
+    carp_version = 'carpe'
     
     if len(argv) == 1:
         printHelp(); sys.exit(1)
