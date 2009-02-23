@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys, popen2, subprocess, pdb
-from numpy import arange, loadtxt, zeros, array, mean
+import numpy as np
 from scipy.io import write_array
 from scipy.io import read_array
 from scipy import array as sarray
@@ -13,6 +13,7 @@ generates integer and float sequences and so on.
 Bernardo M. Rocha, 2008
 """
 
+# interface to CARP elements
 carpElemLabelNumNode = {'Tt': 4, 'Hx': 8, 'Oc': 6, 'Py': 5,
                         'Pr': 6, 'Qd': 4, 'Tr': 3, 'Ln': 2}
 
@@ -30,7 +31,7 @@ def sequence(start, stop, inc):
     Purpose: Generate float sequence from start to (and including) stop
     with increment of inc. Alternative to arange.
     """
-    return arange(start, stop+inc, inc)
+    return np.arange(start, stop+inc, inc)
 
 def read_array_pts(ptsFile):
     """
@@ -68,7 +69,7 @@ def read_array_pts(ptsFile):
         exit(-1)
 
     # numpy array of nodes
-    nodes = loadtxt(nodesTmp)
+    nodes = np.loadtxt(nodesTmp)
     
     if(numNodes != len(nodes)):
         print " error read_array_pts(): the size of the array doesn't match"
@@ -80,11 +81,7 @@ def read_array_pts(ptsFile):
 
 # end of read_array_pts
 
-<<<<<<< .mine
 def read_array_elem(elemFile):
-=======
-def run_command_line (command, output=False):
->>>>>>> .r50
     """
     Purpose: Function to read a .elem file from CARP, where the first
     line contains the number of elements and the remaining lines contain
@@ -158,9 +155,9 @@ def get_element_center(nodeList, xyz):
     Get the centroid of an element given the local node list and the array of
     global coordinates
     """
-    x = zeros(len(nodeList))
-    y = zeros(len(nodeList))
-    z = zeros(len(nodeList))
+    x = np.zeros(len(nodeList))
+    y = np.zeros(len(nodeList))
+    z = np.zeros(len(nodeList))
     
     for i in xrange(len(nodeList)):
         index = nodeList[i]
@@ -168,6 +165,22 @@ def get_element_center(nodeList, xyz):
         y[i] = xyz[index,1]
         z[i] = xyz[index,2]
     
-    return array([mean(x),mean(y),mean(z)])
+    return array([np.mean(x),np.mean(y),np.mean(z)])
 
 # end of getElementCenter
+
+def intersect_array1d(a,b,rows):
+    """
+    Find set intersection of two vectors.    
+    Returns: c the intersect vector and index vectors ia and ib such
+    that c = a(ia) and c = b(ib).
+    """    
+    c  = np.intersect1d(a,b)
+    ma = np.setmember1d(a,b)
+    mb = np.setmember1d(b,a)
+    ia = np.nonzero(ma)[0]
+    ib = np.nonzero(mb)[0]
+    return c, ia, ib
+
+# end of intersect_array
+
