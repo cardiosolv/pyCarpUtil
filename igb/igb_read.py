@@ -3,7 +3,7 @@
 """
 Function to read a binary .igb.gz file
 
-Example: [vm, hd] = read_igb_slice(filename)
+Example: [vm, hd] = read_igb_slice(filename) where vm is [time, x, y, z]
 Input  : filename
 Output : vm array
          hd header
@@ -132,9 +132,9 @@ def read_igb_slice(filename, is_gzipped=False):
 
     # preallocate memory
     if hd.type == 'float':
-        data = zeros( (hd.x, hd.y, hd.z, n_slices), dtype=float32 )
+        data = zeros( (n_slices, hd.x, hd.y, hd.z), dtype=float32 )
     else:
-        data = zeros( (hd.x, hd.y, hd.z, n_slices), dtype=float64 )
+        data = zeros( (n_slices, hd.x, hd.y, hd.z), dtype=float64 )
 
     # size of one time slice
     slice_size = hd.x * hd.y * hd.z
@@ -154,7 +154,7 @@ def read_igb_slice(filename, is_gzipped=False):
 
         if count == slice_size:
             #print " read_igb_slices: Reading time step %d of %d " % (t_slices[i],hd.t)
-            data[:,:,:,i] = slice_buf.reshape(hd.x, hd.y, hd.z)
+            data[i,:,:,:] = slice_buf.reshape(hd.x, hd.y, hd.z)
             actual_timesteps = actual_timesteps + 1
         else:
             print " read_igb_slices: Incomplete time step %d of %d " % (i,n_slices)
@@ -162,7 +162,7 @@ def read_igb_slice(filename, is_gzipped=False):
     hd.t = actual_timesteps
     fh.close()
 
-    print "Total time to read IGB file: %f " % (time.clock()-c0)
+    #print "Total time to read IGB file: %f " % (time.clock()-c0)
     return data, hd
 
 # ........................................................................... #
