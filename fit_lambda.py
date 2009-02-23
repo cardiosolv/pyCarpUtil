@@ -26,7 +26,7 @@ def fit_lambda(igb_file, pts_file, resolution=100):
     aux = -resolution/2
     lindx = [i for i in xrange(size) if ytmp[i] == aux and ztmp[i] == aux]
 
-    value1 = Vm[:,100]
+    value1 = Vm[100,:]
   
     x     = zeros((len(lindx))) # space
     data  = zeros((len(lindx))) # vm at t=100ms    
@@ -73,7 +73,7 @@ def main(args):
     #pts_file = '/data/sim/space_constant/sc_ucla_long_0100um/sc_ucla_long_t0100um_i.pts'
         
     if len(args) != 3:
-        print " Usage: python fit_lambda.py <igb_file> <pts_file>"
+        print "\n Usage: python fit_lambda.py [igb_file] [pts_file]\n"
         sys.exit(-1)
     
     igb_file = str(args[1])
