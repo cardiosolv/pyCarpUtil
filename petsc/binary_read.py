@@ -50,10 +50,10 @@ def petsc_binary_read(filename, spymatrix):
 
         A = sparse.coo_matrix( (s,(i,j)), (m,n) )
 
-        if spymatrix:
+        if spymatrix == 1:
             plt.spy(A,marker='.')
             plt.show()
-    
+
         fd.close()
         return A
 
