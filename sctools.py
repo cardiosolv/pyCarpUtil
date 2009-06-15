@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-import os, sys, popen2, subprocess, pdb
+import os, sys, subprocess, pdb
 import numpy as np
 from scipy.io import write_array
 from scipy.io import read_array
+from scipy.io.numpyio import fwrite, fread
 from scipy import array as sarray
 
 """
-A set of useful functions for reading files, executing command lines,
-generates integer and float sequences and so on.
+A set of useful functions for reading text and binary files, executing command 
+lines, generate integer and float sequences and so on.
 
 Bernardo M. Rocha, 2008
 """
@@ -17,7 +18,7 @@ Bernardo M. Rocha, 2008
 carpElemLabelNumNode = {'Tt': 4, 'Hx': 8, 'Oc': 6, 'Py': 5,
                         'Pr': 6, 'Qd': 4, 'Tr': 3, 'Ln': 2}
 
-def iseq(start=0, stop=None, inc=1):
+def iseq (start=0, stop=None, inc=1):
     """
     Purpose: Generate integer from start to (and including) stop
     with increment of inc. Alternative to range/xrange.
@@ -26,14 +27,14 @@ def iseq(start=0, stop=None, inc=1):
         stop = start; start = 0; inc = 1
     return xrange(start, stop+inc, inc)
 
-def sequence(start, stop, inc):
+def sequence (start, stop, inc):
     """
     Purpose: Generate float sequence from start to (and including) stop
     with increment of inc. Alternative to arange.
     """
     return np.arange(start, stop+inc, inc)
 
-def read_array_pts(ptsFile):
+def read_array_pts (ptsFile):
     """
     Purpose: Function to read a .pts file from CARP simulator, where the first
     line contains the number of nodes and the remaining lines contain
@@ -81,7 +82,7 @@ def read_array_pts(ptsFile):
 
 # end of read_array_pts
 
-def read_array_elem(elemFile):
+def read_array_elem (elemFile):
     """
     Purpose: Function to read a .elem file from CARP, where the first
     line contains the number of elements and the remaining lines contain
@@ -104,6 +105,19 @@ def read_array_elem(elemFile):
 
 # end of read_array_elem
 
+def read_binary_array (binfile, read_type):
+    """
+    Open a binary file read an array of read_type datatype and return the numpy an array
+    PS: read_type is a character in 'cb1silfdFD' (PyArray types)
+    """
+    file = open(binfile,mode='rb')
+    size = fread(file,1,'i')
+    data = fread(file,size,read_type)
+    file.close()
+    return data
+
+# end of read_binary_array
+
 def run_command_line (command, output=False):
     """
     Purpose: Run a command line and capture the stdout and stderr
@@ -117,7 +131,7 @@ def run_command_line (command, output=False):
 
 # end of run_command_line
 
-def run_command_line_old(command, output=False):
+def run_command_line_old (command, output=False):
     """
     Purpose: Run a command line and capture the stdout and stderr
     Deprecated: the use of popen2.popen4 will not be supported in Python 3
@@ -130,7 +144,7 @@ def run_command_line_old(command, output=False):
 
 # end of run_command_line
 
-def check_path(prog_name):
+def check_path (prog_name):
     """
     Purpose: find if the user has the prog_name in his $PATH
     """
@@ -150,7 +164,7 @@ def check_path(prog_name):
         
 # end of check_path
 
-def get_element_center(nodeList, xyz):
+def get_element_center (nodeList, xyz):
     """
     Get the centroid of an element given the local node list and the array of
     global coordinates
@@ -169,9 +183,9 @@ def get_element_center(nodeList, xyz):
 
 # end of getElementCenter
 
-def intersect_array1d(a,b,rows):
+def intersect_array1d (a,b,rows):
     """
-    Find set intersection of two vectors.    
+    Finds set intersection of two vectors.    
     Returns: c the intersect vector and index vectors ia and ib such
     that c = a(ia) and c = b(ib).
     """    
@@ -183,4 +197,26 @@ def intersect_array1d(a,b,rows):
     return c, ia, ib
 
 # end of intersect_array
+
+def intersect_nodes (fpts1, fpts2, fout):
+    """
+    Given two .pts files, this function computes (maps) the common nodes
+    to both files. The output is a file (fout) with the matching nodes indexes.
+    """
+    a = read_array_pts(fpts1)
+    b = read_array_pts(fpts2)
+    
+    ia = np.logical_or.reduce(np.logical_and.reduce(a == b[:,None], axis=2))
+    ib = np.logical_or.reduce(np.logical_and.reduce(b == a[:,None], axis=2))
+    index_ia = np.array(np.nonzero(ia), dtype=np.int).squeeze()
+    index_ib = np.array(np.nonzero(ib), dtype=np.int).squeeze()
+    
+    f = open(fout, 'w')
+    f.write('%d\n' % (np.shape(index_ia)[0]))
+    for i in xrange(len(index_ia)):
+        #print index_ia[i], index_ib[i]
+        f.write('%d %d\n' % (index_ia[i], index_ib[i]))
+    f.close()
+    
+# end of intersect_nodes
 
