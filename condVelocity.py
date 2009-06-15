@@ -18,7 +18,8 @@ def condVelocity(ptsFile, actFile, output=True):
     """
    
     xyz = read_array_pts(ptsFile)
-    act = read_array(actFile)
+    #act = read_array(actFile) # deprecated under new SciPy/Numpy
+    act = loadtxt(actFile)
     actTeste = act
        
     distA =   max(xyz[:,0]/4)
