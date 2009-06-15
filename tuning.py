@@ -134,7 +134,7 @@ def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
 
 # end of find_CV
  
-def print_help():
+def printHelp():
     print """
   >> Usage       : python -d <dx> -v <target velocity> -m <model> -i <gil> -e <gel> -b <beta>
   >> Description : script for tuning tissue conductivities\n  >> Parameters  :
