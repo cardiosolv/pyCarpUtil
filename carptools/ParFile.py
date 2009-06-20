@@ -8,7 +8,7 @@ class ParameterFile:
     
     Bernardo M. Rocha
     """
-    def __init__(self, ionicModel=None, baseFile=None, carp_ver=None):
+    def __init__(self, ionicModel=None, ionicInitial=None, ionicPlugins=None, baseFile=None, carp_ver=None):
         
         if baseFile is None:                        
             self.params = {
@@ -46,9 +46,17 @@ class ParameterFile:
                 del self.params['readmesh']
                 if ionicModel is not None:
                     self.params['imp_region[0].im'] = ionicModel  
+                if ionicInitial is not None:
+                    self.params['imp_region[0].im_sv_init'] = ionicInitial
+                if ionicPlugins is not None:
+                    self.params['imp_region[0].plugins'] = ionicPlugins  
             else:
                 if ionicModel is not None:
                     self.params['region[0].im'] = ionicModel
+                if ionicInitial is not None:
+                    self.params['region[0].im_sv_init'] = ionicInitial
+                if ionicPlugins is not None:
+                    self.params['region[0].plugins'] = ionicPlugins
                     
             self.num_stim = 0
             self.num_LATs = 0
@@ -136,7 +144,10 @@ class ParameterFile:
         sortedKeys  = sorted(self.params.keys())        
         for key in sortedKeys:
             val = self.params[key]
-            f.write("%s = %s\n" % (key, val))
+            if type(val) is str:
+                f.write("%s = \"%s\"\n" % (key, val))
+            else:
+                f.write("%s = %s\n" % (key, val))
     
         f.write("\n# Stimulus\n\n")
         f.write("num_stim = %s\n" % self.num_stim)

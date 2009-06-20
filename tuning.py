@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import os, sys, getopt, shutil
+import os, sys, getopt, shutil, pdb
 from carptools.MeshFile import MeshFile
 from carptools.ParFile import ParameterFile
 from condVelocity import condVelocity
 from sctools import check_path, run_command_line
 
-DEBUG = False
+DEBUG = False 
 
 """
 A simple script for tuning conduction velocities for bidomain/monodomain models
@@ -17,9 +17,9 @@ class CableTest(ParameterFile):
     """
     Base class for the cable to run the tuning simulations
     """
-    def __init__(self, im, gil, gel, beta, vs):
+    def __init__(self, im, sv_init, plgs, gil, gel, beta, vs):
 
-        ParameterFile.__init__(self, ionicModel=im, carp_ver=vs)
+        ParameterFile.__init__(self, ionicModel=im, ionicInitial=sv_init, ionicPlugins=plgs, carp_ver=vs)
 
         self.set_parameter('surfvolrat',  beta)
         self.set_parameter('gridout_i',   2)
@@ -45,7 +45,9 @@ class CableTest(ParameterFile):
           self.set_parameter('gregion[0].g_el', gel)
 
         self.add_LAT ('activation')
-        self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
+#        self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
+        # GW_CAN
+        self.add_stimulus(0, 0, 100e-4, 0.5, 100, 1000, 1000, -5099, -500, -500)
 
 # end of CableTest
 
@@ -61,13 +63,16 @@ def calculate_g(v1,v0,g0):
 
 # end of calculate_g
 
-def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
+def find_CV(avg_dx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBinary, carp_ver):
     """
-    Input: avg_dx - mesh resolution as a scalar or list
+    Input: avg_dx  - mesh resolution as a scalar or list
                            (list - Not implemented yet)
-           gil    - intracellular conductivity along the cable
-           gel    - extracellular conductivity along the cable
-           beta   - surface-to-volume ratio
+           gil     - intracellular conductivity along the cable
+           gel     - extracellular conductivity along the cable
+           beta    - surface-to-volume ratio
+           model   - which ionic model to use
+           sv_init - file holding initial state vector
+           plugs   - which plugins are used to augment the model
     Output:
            cv_measured in a 1cm long cable with avg_dx of resolution and using
            the value of g_bulk as conductivity
@@ -92,7 +97,7 @@ def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
     mesh_name = "%s/mesh4exp"     % (temp_dir)
     mesh_file = "%s/expMesh.par"  % (temp_dir)
     carp_file = "%s/expParam.par" % (temp_dir)
-    out_dir = "%s/OUTPUT_DIR"    % (temp_dir)
+    out_dir   = "%s/OUTPUT_DIR"   % (temp_dir)
 
     for res in resList:
         
@@ -103,7 +108,7 @@ def find_CV(avg_dx, gil, gel, beta, model, carpBinary, mesherBinary, carp_ver):
                        size2=yzsize, element=1, resolution=res)
         msh.write_to_file(mesh_file)
 
-        cab = CableTest(model, gil, gel, beta, carp_ver)
+        cab = CableTest(model, sv_init, plugs, gil, gel, beta, carp_ver)
         cab.write_to_file(carp_ver, carp_file)
 
         # run MESHER
@@ -140,11 +145,14 @@ def printHelp():
   >> Description : script for tuning tissue conductivities\n  >> Parameters  :
   \t -d <value>   --resolution=<value>   \t avg resolution of mesh in um       \t (default=100um)
   \t -v <value>   --velocity=<value>     \t desired conduction velocity in m/s \t (default=0.6)
-  \t -m <model>   --model=<model         \t name of ionic model to test        \t (default=MBRDR)
+  \t -m <model>   --model=<model>        \t name of ionic model to test        \t (default=MBRDR)
+  \t -s <sv_init> --sv_init=<sv_init>    \t file name with initial state vector\t (default="")
+  \t -p <plugin>  --plugin=<plugin>      \t name of plugin to augment model    \t (default="")
   \t -i <value>   --gil=<value>          \t initial value for gil              \t (default=0.174 S/m)
   \t -e <value>   --gel=<value>          \t initial value for gel              \t (default=0.625 S/m)
   \t -b <value>   --beta=<value>         \t surface-to-volume ratio            \t (default=0.14 cm^-1)
-  \t -t <value>   --tol=<value>          \t tolerance - percentage of error    \t (default=0.05)
+  \t -t <value>   --tol=<value>          \t tolerance - percentage of error    \t (default=0.01)
+  \t -c <value>   --converge=<value>     \t iterate until convergence          \t (default=True)
   \t --with-carp = <path_to_carp_binary>   \t specify your carp version
   \t --with-mesher=<path_to_mesher_binary> \t specify your mesher version
   """
@@ -161,11 +169,20 @@ def main(argv):
 
     # default values 
     model   = "MBRDR"
+    sv_init = ""
+    mtune   = ""
+    plugs   = ""
+    ptune   = ""
     avgdx   = 100
+    vel     = 0.5
     gil     = 0.174
     gel     = 0.625
     beta    = 0.14
-    tol     = 0.05
+    tol     = 0.01
+    convg   = True
+
+    gl_bulk = gil*gel/(gil+gel)
+
     
     checkBin     = True
     carpBinary   = 'carp.linux.petsc'
@@ -177,13 +194,13 @@ def main(argv):
     
     # command lind parsing with getopt
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hd:v:i:e:b:m:t:",
-                    ["help", "resolution=","velocity=","gi=","ge=","beta=","model=","tol=","with-carp=","with-mesher="])
+        opts, args = getopt.getopt(sys.argv[1:], "hd:v:i:e:b:m:s:p:t:c:",
+                    ["help", "resolution=","velocity=","gi=","ge=","beta=","model=","sv_init=", "plugin=","tol=","converge=","with-carp=","with-mesher="])
     except getopt.GetoptError, err:
         print str(err) # option -a not recognized"
         print_help()
         sys.exit(-1)
-    
+   
     for o, a in opts:
         if o in ("-h", "--help"):
             printHelp()
@@ -202,6 +219,12 @@ def main(argv):
             tol = float(a)
         elif o in ("-m","--model"):
             model = str(a)
+        elif o in ("-s","--sv_init"):
+            sv_init = str(a)
+        elif o in ("-p","--plugin"):
+            plugs = str(a)
+        elif o in ("-c","--converge"):
+            convg = bool(int(a)) 
         elif o == "--with-carp":
             carpBinary = str(a)
             checkBin   = False
@@ -228,19 +251,23 @@ def main(argv):
         print "    Iteration  %d: gil =%8.5f, gel =%8.5f, gl_bulk =%8.5f" % (its,gil,gel,(gil*gel/gil+gel)),
         sys.stdout.flush()
 
-        CV_measured = find_CV (avgdx, gil, gel, beta, model, carpBinary, mesherBinary, carp_version)
+        CV_measured = find_CV (avgdx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBinary, carp_version)
         print " --->  CV measured : %8.5f m/s" % CV_measured
         
-        gl_bulk     = gil*gel/(gil+gel)
-        gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
-        gil         = gel*gl_bulk/(gel-gl_bulk)
-        delta_abs   = vel-CV_measured
-        delta_rel   = delta_abs/vel
-        its        += 1
+        if convg:
+            gl_bulk     = gil*gel/(gil+gel)
+            gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
+            gil         = gel*gl_bulk/(gel-gl_bulk)
+            delta_abs   = vel-CV_measured
+            delta_rel   = delta_abs/vel
+            its        += 1
+        else:
+            vel         = CV_measured
     
     print "\n S i m u l a t i o n   r e s u l t s\n"    
-    print "    bulk conductivity: %8.5f"          % (gl_bulk)
-    print "    use gi/ge        : %8.5f %8.5f \n" % (gel*gl_bulk/(gel-gl_bulk), gel)
+    print "    bulk conductivity: %8.5f"       % (gl_bulk)
+    print "    use gi/ge        : %8.5f %8.5f" % (gel*gl_bulk/(gel-gl_bulk), gel)
+    print "    final CV         : %8.5f\n"      % (CV_measured)
 
 # end of main
 
