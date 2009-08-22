@@ -2,9 +2,9 @@
 
 import os, sys, subprocess, pdb
 import numpy as np
-from scipy.io import write_array
-from scipy.io import read_array
-from scipy.io.numpyio import fwrite, fread
+#from scipy.io import write_array
+#from scipy.io import read_array
+#from scipy.io.numpyio import fwrite, fread
 from scipy import array as sarray
 
 """

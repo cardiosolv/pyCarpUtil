@@ -37,8 +37,10 @@ class ParameterFile:
                 self.params['num_gregions'] = 1
                 self.params['gregion[0].g_il'] = self.params['gil'] 
                 self.params['gregion[0].g_el'] = self.params['gel']
-                
-                # delete all useless CARPpe parameters
+                self.params['imp_region[0].cellSurfVolRatio'] = 0.14
+
+               # delete all useless CARPpe parameters
+                del self.params['surfvolrat']
                 del self.params['num_regions']
                 del self.params['region[0].name']
                 del self.params['gil']

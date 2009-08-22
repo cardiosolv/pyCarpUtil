@@ -6,7 +6,7 @@ from carptools.ParFile import ParameterFile
 from condVelocity import condVelocity
 from sctools import check_path, run_command_line
 
-DEBUG = False 
+DEBUG = True 
 
 """
 A simple script for tuning conduction velocities for bidomain/monodomain models
@@ -21,7 +21,6 @@ class CableTest(ParameterFile):
 
         ParameterFile.__init__(self, ionicModel=im, ionicInitial=sv_init, ionicPlugins=plgs, carp_ver=vs)
 
-        self.set_parameter('surfvolrat',  beta)
         self.set_parameter('gridout_i',   2)
         self.set_parameter('dt',          10)
         self.set_parameter('timedt',      0.5)
@@ -36,18 +35,20 @@ class CableTest(ParameterFile):
 
         # version specific settings
         if vs is 'carpe':
-          self.set_parameter('readmesh',  3)
-          self.set_parameter('gil',       gil)
-          self.set_parameter('gel',       gil)
+          self.set_parameter('readmesh',   3)
+          self.set_parameter('gil',        gil)
+          self.set_parameter('gel',        gil)
+          self.set_parameter('surfvolrat', beta)
 
         if vs is 'carpm':
           self.set_parameter('gregion[0].g_il', gil)
           self.set_parameter('gregion[0].g_el', gel)
+          self.set_parameter('imp_region[0].cellSurfVolRatio', beta)
 
         self.add_LAT ('activation')
 #        self.add_stimulus(0, 0, 5e-2, 1, 100, 1000, 1000, -5099, -500, -500)
         # GW_CAN
-        self.add_stimulus(0, 0, 100e-4, 0.5, 100, 1000, 1000, -5099, -500, -500)
+        self.add_stimulus(0, 0, 400, 1.0, 200, 1000, 1000, -5099, -500, -500)
 
 # end of CableTest
 
@@ -185,7 +186,7 @@ def main(argv):
 
     
     checkBin     = True
-    carpBinary   = 'carp.linux.petsc'
+    carpBinary   = 'carpm.petsc'
     mesherBinary = 'mesher'
     carp_version = 'carpm'
     
@@ -244,11 +245,12 @@ def main(argv):
     eps = vel * tol    
     its = 1
     CV_measured = 0.
+    gl_bulk = gil*gel/(gil+gel)
 
     print_header (model, avgdx, vel, tol)
     
     while abs(vel - CV_measured) > eps:
-        print "    Iteration  %d: gil =%8.5f, gel =%8.5f, gl_bulk =%8.5f" % (its,gil,gel,(gil*gel/gil+gel)),
+        print "    Iteration  %d: gil =%8.5f, gel =%8.5f, gl_bulk =%8.5f" % (its,gil,gel,gl_bulk),
         sys.stdout.flush()
 
         CV_measured = find_CV (avgdx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBinary, carp_version)

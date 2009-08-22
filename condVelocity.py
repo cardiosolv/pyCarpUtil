@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from numpy import *
-from scipy.io import write_array
-from scipy.io import read_array
+#from scipy.io import write_array
+#from scipy.io import read_array
 from sctools import read_array_pts
 
 def condVelocity(ptsFile, actFile, output=True):
