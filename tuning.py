@@ -17,7 +17,7 @@ class CableTest(ParameterFile):
     """
     Base class for the cable to run the tuning simulations
     """
-    def __init__(self, im, sv_init, plgs, gil, gel, beta, vs):
+    def __init__(self, im, sv_init, plgs, gil, gel, beta, tend, vs):
 
         ParameterFile.__init__(self, ionicModel=im, ionicInitial=sv_init, ionicPlugins=plgs, carp_ver=vs)
 
@@ -28,7 +28,7 @@ class CableTest(ParameterFile):
         self.set_parameter('parab_solve', 1) # old CARPm (CN_parab)
         self.set_parameter('bidomain',    0) # old CARPm (solnmethod)
         self.set_parameter('cg_tol_parab',1.0e-06)
-        self.set_parameter('tend',        200)
+        self.set_parameter('tend',        tend)
 
         #self.set_parameter('num_LATs',    1)
         #self.set_parameter('lats[0].ID',  'activation')
@@ -64,12 +64,13 @@ def calculate_g(v1,v0,g0):
 
 # end of calculate_g
 
-def find_CV(avg_dx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBinary, carp_ver):
+def find_CV(avg_dx, vel, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBinary, carp_ver):
     """
     Input: avg_dx  - mesh resolution as a scalar or list
                            (list - Not implemented yet)
            gil     - intracellular conductivity along the cable
            gel     - extracellular conductivity along the cable
+           vel     - desired conduction velocity
            beta    - surface-to-volume ratio
            model   - which ionic model to use
            sv_init - file holding initial state vector
@@ -88,7 +89,8 @@ def find_CV(avg_dx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBin
 
     # temporary files setttings
     if os.name == 'posix':
-        temp_dir = '/tmp'
+	temp_dir  = os.environ.get("HOME")
+        temp_dir += '/tmp'
     else:
         temp_dir = ''
 
@@ -101,15 +103,15 @@ def find_CV(avg_dx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBin
     out_dir   = "%s/OUTPUT_DIR"   % (temp_dir)
 
     for res in resList:
-        
-        yzsize = float(res/10000.) # convert to cm
+        yzsize = float(res/10000.)   # convert to cm
+        tend   = float(xsize/vel*10.) * 2 # cm*10/(mm/ms) +100%
 
         # create mesh and cable 
         msh = MeshFile(mesh_name, size0=xsize, size1=yzsize,
                        size2=yzsize, element=1, resolution=res)
         msh.write_to_file(mesh_file)
 
-        cab = CableTest(model, sv_init, plugs, gil, gel, beta, carp_ver)
+        cab = CableTest(model, sv_init, plugs, gil, gel, beta, tend, carp_ver)
         cab.write_to_file(carp_ver, carp_file)
 
         # run MESHER
@@ -125,7 +127,7 @@ def find_CV(avg_dx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBin
 
         # calculate CV
         sim_pts = "%s/%s_i.pts" % (out_dir, mesh_temp)
-        sim_act = "%s/activation-thresh.dat" % (out_dir)
+        sim_act = "%s/activation-thresh" % (out_dir)
         condvel = condVelocity(sim_pts, sim_act, output=False)
         cvList.append(condvel)
 
@@ -253,13 +255,15 @@ def main(argv):
         print "    Iteration  %d: gil =%8.5f, gel =%8.5f, gl_bulk =%8.5f" % (its,gil,gel,gl_bulk),
         sys.stdout.flush()
 
-        CV_measured = find_CV (avgdx, gil, gel, beta, model, sv_init, plugs, carpBinary, mesherBinary, carp_version)
+        CV_measured = find_CV(avgdx, vel, gil, gel, beta, model, sv_init, 
+                              plugs, carpBinary, mesherBinary, carp_version)
         print " --->  CV measured : %8.5f m/s" % CV_measured
         
         if convg:
             gl_bulk     = gil*gel/(gil+gel)
-            gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
-            gil         = gel*gl_bulk/(gel-gl_bulk)
+            #gl_bulk     = calculate_g (vel, CV_measured, gl_bulk)
+            #gil         = gel*gl_bulk/(gel-gl_bulk)
+            gil         = calculate_g (vel, CV_measured, gil)
             delta_abs   = vel-CV_measured
             delta_rel   = delta_abs/vel
             its        += 1
